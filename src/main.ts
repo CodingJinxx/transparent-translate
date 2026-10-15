@@ -1,6 +1,7 @@
 import { editorInfoField, getLanguage, MarkdownView, Notice, Platform, Plugin, requestUrl, setIcon, TFile, type WorkspaceLeaf } from 'obsidian';
 import type { EditorView } from '@codemirror/view';
 import { NoteParser, parseNote } from './core/note';
+import { namesPath } from './core/names-format';
 import { isTranslatablePath, notePathForCache } from './core/paths';
 import { sentenceHash } from './core/text';
 import { protect } from './core/protect';
@@ -11,12 +12,15 @@ import { log, setDebug } from './log';
 import { ModeManager } from './modes';
 import { VaultCacheBackend } from './obsidian/vault-backend';
 import { CacheStore } from './services/cache-store';
+import { NameService } from './services/name-service';
+import { NameStore } from './services/name-store';
 import { TranslationService } from './services/translation-service';
 import { DerivedSettings, mergeSettings, type TransparentTranslateSettings } from './settings';
 import { LlmTranslator, parseExtraBody, parseHeaderLines, type HttpClient, type LlmConfig } from './translator/llm-translator';
 import { registerCommands } from './commands';
 import { ConfirmModal } from './ui/confirm-modal';
 import { TransparentTranslateSettingTab } from './ui/settings-tab';
+import { NameDisplayController } from './views/name-display';
 import { ReadingViewController } from './views/reading-view';
 import { resetAnimations } from './views/decode-animation';
 import { createLivePreviewExtension, refreshEffect, setModeEffect } from './views/live-preview/extension';
@@ -32,11 +36,14 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 	derived!: DerivedSettings;
 	store!: CacheStore;
 	service!: TranslationService;
+	nameStore!: NameStore;
+	names!: NameService;
 	translator: LlmTranslator | null = null;
 	readonly isMobile = Platform.isMobile;
 
 	private modes!: ModeManager;
 	private reading!: ReadingViewController;
+	private nameDisplay!: NameDisplayController;
 	private readonly parsers = new Map<string, NoteParser>();
 	private readonly editorViews = new Set<EditorView>();
 	private readonly headerActions = new WeakMap<MarkdownView, HTMLElement>();
@@ -63,6 +70,18 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 			onError: (error) => this.reportError(error),
 		});
 		this.service.onUpdate((path) => this.scheduleRefresh(path));
+		this.nameStore = new NameStore(new VaultCacheBackend(this.app), {
+			cacheFolder: () => this.settings.cacheFolder,
+			saveDelayMs: 1500,
+		});
+		this.names = new NameService({
+			store: this.nameStore,
+			translator: () => this.translator,
+			batchSize: () => this.settings.batchSize,
+			concurrency: () => this.settings.concurrency,
+			glossary: () => this.derived.glossary,
+			onError: (error) => this.reportError(error),
+		});
 		this.modes = new ModeManager(() => this.settings.defaultMode);
 
 		this.reading = new ReadingViewController(this);
@@ -70,6 +89,8 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 		this.registerEditorExtension(createLivePreviewExtension(this));
 		this.addSettingTab(new TransparentTranslateSettingTab(this.app, this));
 		registerCommands(this);
+		this.nameDisplay = new NameDisplayController(this);
+		this.nameDisplay.start();
 
 		if (this.settings.statusBar) this.createStatusBar();
 		this.app.workspace.onLayoutReady(() => {
@@ -95,8 +116,11 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 			this.headerActions.get(leaf.view)?.remove();
 			this.headerActions.delete(leaf.view);
 		}
+		this.nameDisplay.stop();
 		this.service.cancelAll();
+		this.names.cancelAll();
 		void this.store.flush();
+		void this.nameStore.flush();
 		for (const timer of this.refreshTimers.values()) window.clearTimeout(timer);
 	}
 
@@ -119,6 +143,15 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 		this.parsers.clear();
 		for (const view of this.editorViews) view.dispatch({ effects: refreshEffect.of(null) });
 		this.reading.refreshAll();
+		this.nameDisplay?.refresh();
+	}
+
+	/** Shows file and folder names in `mode` (original turns the feature off). */
+	setNameMode(mode: DisplayMode): void {
+		this.settings.nameMode = mode;
+		void this.saveSettings();
+		this.nameDisplay.refresh();
+		if (mode !== 'original' && this.names.canTranslate && !this.hasProvider()) new Notice(t('notice.no-provider'));
 	}
 
 	override async onExternalSettingsChange(): Promise<void> {
@@ -395,6 +428,10 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 		const cacheNote = (path: string) => notePathForCache(this.settings.cacheFolder, path);
 
 		const onCacheChange = async (file: TFile) => {
+			if (file.path === namesPath(this.settings.cacheFolder)) {
+				this.nameStore.handleExternalChange(await this.app.vault.read(file));
+				return;
+			}
 			const notePath = cacheNote(file.path);
 			if (!notePath) return;
 			await this.store.handleExternalChange(notePath, await this.app.vault.read(file));

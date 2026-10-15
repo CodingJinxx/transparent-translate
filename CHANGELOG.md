@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- Optional translated file and folder names in the file explorer, tab titles, note titles and breadcrumbs (setting and commands "Show file and folder names in …"). Only the display changes; the real name is shown while renaming. Translations are cached in `_Translations/_names.md`.
+
 ## [0.1.1] - 2026-10-15
 
 ### Fixed

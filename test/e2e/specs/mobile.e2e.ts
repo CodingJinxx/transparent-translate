@@ -3,6 +3,8 @@ import { before, describe, it } from 'mocha';
 import { configure, editorValue, freshVault, mockStats, openNote, readingText } from '../helpers';
 import { serializeCache, emptyCache } from '../../../src/core/cache-format';
 import { sentenceHash } from '../../../src/core/text';
+import { emptyNames, serializeNames } from '../../../src/core/names-format';
+import { nameKey } from '../../../src/core/names';
 
 const NOTE = 'Edit.md';
 
@@ -49,5 +51,20 @@ describe('Mobile (view-only)', function () {
 		await browser.keys('xyz'.split(''));
 		await browser.pause(300);
 		expect(await editorValue()).toBe(before);
+	});
+
+	it('shows synced file names from the cache without requests', async function () {
+		const names = emptyNames();
+		names.names[nameKey('Edit')] = { src: 'Edit', en: 'Editing' };
+		const before = (await mockStats()).requests;
+		await browser.executeObsidian(async ({ app, plugins }, content) => {
+			await app.vault.create('_Translations/_names.md', content);
+			plugins.transparentTranslate.setNameMode('en');
+		}, serializeNames(names));
+		await openNote(NOTE, 'preview');
+		const title = () => browser.executeObsidian(() => document.querySelector('.inline-title')?.textContent ?? '');
+		await browser.waitUntil(async () => (await title()) === 'Editing', { timeoutMsg: 'synced name was not shown' });
+		await browser.pause(800);
+		expect((await mockStats()).requests).toBe(before);
 	});
 });

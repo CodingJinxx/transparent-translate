@@ -13,6 +13,8 @@ export interface TranslationContext {
 	glossary: readonly string[];
 	/** Masked surrounding text for context, never translated. */
 	context?: readonly string[];
+	/** `names` translates file and folder names instead of sentences. */
+	purpose?: 'sentences' | 'names';
 }
 
 export interface TokenUsage {

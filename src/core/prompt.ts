@@ -19,6 +19,8 @@ export interface PromptContext {
 	/** Surrounding text (already masked) to help with ambiguous sentences. Not translated. */
 	context?: readonly string[];
 	jsonMode: boolean;
+	/** What the items are. `names` switches to the file and folder name prompt. */
+	purpose?: 'sentences' | 'names';
 }
 
 export const LANGUAGE_NAMES: Record<TargetLanguage, string> = {
@@ -54,6 +56,35 @@ export function systemPrompt(target: TargetLanguage, jsonMode: boolean): string 
 	].join('\n');
 }
 
+/** System prompt for file and folder names (display-only titles, no placeholders). */
+export function namesSystemPrompt(target: TargetLanguage, jsonMode: boolean): string {
+	const language = LANGUAGE_NAMES[target];
+	const output = jsonMode
+		? [
+				'Return a JSON object {"translations": [...]} whose array holds exactly one object per input name, in input order.',
+				'Each object is {"lang": "<language of the INPUT name: en, de or mixed>", "text": "<translation>"}.',
+			].join('\n')
+		: [
+				'Return exactly one line per input name: the marker, the language of the INPUT name in curly braces ({en}, {de} or {mixed}), then the translation.',
+				'Use the same numbers as the input, in order. Output nothing else: no preamble, no notes, no code fences.',
+				'Example for the input "<<1>> 2024-05 Besprechungsnotizen" and "<<2>> Project plan":',
+				'<<1>> {de} 2024-05 Meeting notes',
+				'<<2>> {en} Project plan',
+			].join('\n');
+	return [
+		`You translate the names of files and folders in a personal notes vault into ${language}. Each numbered line is one name.`,
+		'Rules:',
+		'- Translate only. Produce a short title, not a sentence: no quotes, no trailing punctuation, no explanation.',
+		'- Keep the casing style and separators of the original (Title Case, snake_case, kebab-case, lower case).',
+		'- Keep leading numbers, dates and ordering prefixes exactly as written, including their separators.',
+		'- Keep version numbers, acronyms, product names, proper nouns and code-like tokens unchanged.',
+		`- Names already in ${language} stay exactly as they are.`,
+		'- Keep the glossary terms exactly as written.',
+		'- Each input name becomes exactly one output name. Never merge or split names.',
+		output,
+	].join('\n');
+}
+
 export function userPrompt(items: readonly PromptItem[], target: TargetLanguage, ctx: PromptContext): string {
 	const parts: string[] = [];
 	parts.push(`Target language: ${LANGUAGE_NAMES[target]}`);
@@ -63,14 +94,14 @@ export function userPrompt(items: readonly PromptItem[], target: TargetLanguage,
 		parts.push('Context (for reference only, do not translate or output):');
 		parts.push(ctx.context.map((c) => `> ${c}`).join('\n'));
 	}
-	parts.push(`Sentences (${items.length}):`);
+	parts.push(`${ctx.purpose === 'names' ? 'Names' : 'Sentences'} (${items.length}):`);
 	parts.push(items.map((item) => `<<${item.id}>> ${item.text}`).join('\n'));
 	return parts.join('\n\n');
 }
 
 export function buildMessages(items: readonly PromptItem[], target: TargetLanguage, ctx: PromptContext): ChatMessage[] {
 	return [
-		{ role: 'system', content: systemPrompt(target, ctx.jsonMode) },
+		{ role: 'system', content: ctx.purpose === 'names' ? namesSystemPrompt(target, ctx.jsonMode) : systemPrompt(target, ctx.jsonMode) },
 		{ role: 'user', content: userPrompt(items, target, ctx) },
 	];
 }

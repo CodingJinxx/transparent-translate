@@ -36,6 +36,8 @@ export async function configure(extra: Partial<TransparentTranslateSettings> = {
 				defaultMode: 'original',
 				noteEditPreferences: {},
 				animateTranslations: false,
+				nameMode: 'original',
+				nameIncludeAttachments: false,
 				excludedFolders: '',
 				includeOnlyFolders: '',
 				...overrides,
@@ -69,6 +71,8 @@ export async function freshVault(): Promise<void> {
 		plugin.service.cancelAll();
 		plugin.service.clearFailures();
 		plugin.store.reset();
+		plugin.nameStore.reset();
+		plugin.names.reset();
 		const folder = app.vault.getFolderByPath(plugin.settings.cacheFolder);
 		if (folder) await app.vault.delete(folder, true);
 	});

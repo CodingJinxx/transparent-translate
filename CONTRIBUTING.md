@@ -26,12 +26,13 @@ src/
   core/          Pure logic, no Obsidian imports: blocks, sentences, placeholders,
                  hashing, cache format, prompt, output parsing, language detection
   translator/    OpenAI-compatible client (HTTP injected, so it runs in tests)
-  services/      Cache store and translation queue
+  services/      Cache stores and translation queues (notes and names)
   views/         Reading view controller, Live Preview (CodeMirror 6) extension,
-                 decode animation
+                 decode animation, file and folder name display (name-display.ts)
   ui/            Settings tab and modals
   obsidian/      Vault backend; internals.ts is the only place that touches
-                 non-public API (the "Excluded files" list)
+                 non-public API (the "Excluded files" list and the tab header
+                 elements used to show translated file names)
   i18n/          English and German strings (same keys, enforced by types)
   main.ts        Plugin lifecycle and wiring
 test/

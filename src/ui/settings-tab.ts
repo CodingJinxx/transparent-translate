@@ -90,6 +90,26 @@ export class TransparentTranslateSettingTab extends PluginSettingTab {
 					await this.save();
 				}),
 			);
+		new Setting(el)
+			.setName(t('settings.name-mode'))
+			.setDesc(t('settings.name-mode.desc'))
+			.addDropdown((d) =>
+				d
+					.addOption('original', t('mode.original'))
+					.addOption('en', t('mode.en'))
+					.addOption('de', t('mode.de'))
+					.setValue(this.settings.nameMode)
+					.onChange((value) => this.plugin.setNameMode(value as DisplayMode)),
+			);
+		new Setting(el)
+			.setName(t('settings.name-attachments'))
+			.setDesc(t('settings.name-attachments.desc'))
+			.addToggle((toggle) =>
+				toggle.setValue(this.settings.nameIncludeAttachments).onChange(async (value) => {
+					this.settings.nameIncludeAttachments = value;
+					await this.save(true);
+				}),
+			);
 		if (!this.plugin.isMobile) {
 			new Setting(el)
 				.setName(t('settings.status-bar'))
@@ -468,6 +488,7 @@ export class TransparentTranslateSettingTab extends PluginSettingTab {
 		}
 		try {
 			await this.plugin.store.flush();
+			await this.plugin.nameStore.flush();
 			const folder = this.app.vault.getFolderByPath(current);
 			if (folder) {
 				const parent = next.includes('/') ? next.slice(0, next.lastIndexOf('/')) : '';
@@ -475,6 +496,8 @@ export class TransparentTranslateSettingTab extends PluginSettingTab {
 				await this.app.fileManager.renameFile(folder, next);
 			}
 			this.plugin.store.reset();
+			this.plugin.nameStore.reset();
+			this.plugin.names.reset();
 			this.settings.cacheFolder = next;
 			await this.save(true);
 			new Notice(t('notice.cache-moved', { folder: next }));

@@ -28,6 +28,11 @@ const EN: Record<string, string> = {
 	'Hier steht ein zweiter Satz.': 'Here is a second sentence.',
 	'Ein Punkt in der Liste.': 'An item in the list.',
 	'Guten Morgen': 'Good morning',
+	// File and folder names of the e2e vault.
+	Informatik: 'Computer science',
+	'Lektion 1': 'Lesson 1',
+	'Woche 1 (14.10.-20.10.)': 'Week 1 (14.10.-20.10.)',
+	Tagebuch: 'Diary',
 };
 
 const DE: Record<string, string> = {

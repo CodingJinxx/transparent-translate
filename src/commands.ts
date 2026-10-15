@@ -1,4 +1,5 @@
-import { MarkdownView, Notice } from 'obsidian';
+import { MarkdownView, Notice, TFile } from 'obsidian';
+import { nameKey } from './core/names';
 import { normalizeSentence } from './core/text';
 import { isTargetLanguage, type DisplayMode } from './core/types';
 import { t } from './i18n';
@@ -27,6 +28,12 @@ export function registerCommands(plugin: TransparentTranslatePlugin): void {
 	modeCommand('show-original', t('command.show-original'), 'original');
 	modeCommand('show-english', t('command.show-english'), 'en');
 	modeCommand('show-german', t('command.show-german'), 'de');
+
+	const nameCommand = (id: string, name: string, mode: DisplayMode) =>
+		plugin.addCommand({ id, name, callback: () => plugin.setNameMode(mode) });
+	nameCommand('names-original', t('command.names-original'), 'original');
+	nameCommand('names-english', t('command.names-english'), 'en');
+	nameCommand('names-german', t('command.names-german'), 'de');
 
 	plugin.addCommand({
 		id: 'cycle-display-language',
@@ -89,6 +96,8 @@ export function registerCommands(plugin: TransparentTranslatePlugin): void {
 			plugin.service.cancelAll();
 			plugin.service.clearFailures();
 			plugin.store.reset();
+			plugin.nameStore.reset();
+			plugin.names.reset();
 			if (folder) await plugin.app.fileManager.trashFile(folder);
 			new Notice(t('notice.cache-cleared-all'));
 			plugin.refreshAllViews();
@@ -159,6 +168,7 @@ export function registerCommands(plugin: TransparentTranslatePlugin): void {
 			const files = plugin.app.vault.getMarkdownFiles().filter((f) => f.path.startsWith(prefix));
 			let removed = 0;
 			for (const cacheFile of files) {
+				if (cacheFile.path === plugin.nameStore.path) continue;
 				const notePath = cacheFile.path.slice(prefix.length);
 				const note = plugin.app.vault.getFileByPath(notePath);
 				if (!note) {
@@ -168,6 +178,15 @@ export function registerCommands(plugin: TransparentTranslatePlugin): void {
 				const model = plugin.parse(notePath, await plugin.app.vault.cachedRead(note));
 				await plugin.store.load(notePath);
 				removed += plugin.store.prune(notePath, new Set(model.sentences.map((s) => s.hash)), plugin.settings.pruneAfterDays);
+			}
+			if (plugin.settings.nameMode !== 'original' || plugin.nameStore.size > 0) {
+				await plugin.nameStore.load();
+				const live = new Set<string>();
+				for (const entry of plugin.app.vault.getAllLoadedFiles()) {
+					if (entry.path === '/') continue;
+					live.add(nameKey(entry instanceof TFile ? entry.basename : entry.name));
+				}
+				removed += plugin.nameStore.prune(live, plugin.settings.pruneAfterDays);
 			}
 			new Notice(t('notice.pruned', { count: removed }));
 		},

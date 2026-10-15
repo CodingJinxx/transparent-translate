@@ -38,6 +38,9 @@ export interface TransparentTranslateSettings {
 	livePreview: boolean;
 	animateTranslations: boolean;
 	statusBar: boolean;
+	/** Language of file and folder names in the explorer, tabs and titles. `original` = off. */
+	nameMode: DisplayMode;
+	nameIncludeAttachments: boolean;
 
 	// Editing in translated views
 	editSessionDefault: EditSessionDefault;
@@ -85,6 +88,8 @@ export const DEFAULT_SETTINGS: TransparentTranslateSettings = {
 	livePreview: true,
 	animateTranslations: true,
 	statusBar: true,
+	nameMode: 'original',
+	nameIncludeAttachments: false,
 
 	editSessionDefault: 'ask',
 	applyOnLeave: true,
