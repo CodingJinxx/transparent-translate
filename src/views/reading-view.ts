@@ -121,7 +121,7 @@ export class ReadingViewController {
 		const token = ++section.token;
 		const mode = this.host.modeOf(section.leaf, section.path);
 		if (!isTargetLanguage(mode) || !this.host.isTranslatable(section.path)) {
-			this.restore(section);
+			this.restore(section, true);
 			return;
 		}
 		const info = section.ctx.getSectionInfo(section.el);
@@ -162,9 +162,11 @@ export class ReadingViewController {
 		}
 	}
 
-	private restore(section: Section): void {
+	/** Puts Obsidian's own rendering back. `animate` plays the decode animation when leaving a translated mode. */
+	private restore(section: Section, animate = false): void {
 		section.token++;
 		const { el, original } = section;
+		const wasTranslated = section.shown !== null;
 		if (original !== null) {
 			el.empty();
 			for (const node of original) el.appendChild(node);
@@ -174,6 +176,10 @@ export class ReadingViewController {
 		el.removeClass('tt-translated', 'tt-has-pending');
 		el.removeAttribute('lang');
 		section.shown = null;
+		if (animate && wasTranslated && this.host.settings.animateTranslations) {
+			const line = section.ctx.getSectionInfo(el)?.lineStart ?? 0;
+			if (claimAnimation(animationKey(section.path, 'original', `section-${line}`))) decode(el);
+		}
 	}
 
 	/**
@@ -202,7 +208,8 @@ export class ReadingViewController {
 			{ markerClassPrefix: MARKER_PREFIX, wrapTranslated: host.settings.animateTranslations },
 		);
 		if (missing) host.service.request(path, note, note.sentences, mode, host.noteTitle(path));
-		if (composed.translated + composed.pending + composed.failed + composed.missing === 0) return null;
+		const animating = host.settings.animateTranslations && composed.same > 0;
+		if (composed.translated + composed.pending + composed.failed + composed.missing === 0 && !animating) return null;
 		return { text: composed.text, pending: composed.pending > 0 };
 	}
 }

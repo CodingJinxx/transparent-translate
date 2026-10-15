@@ -125,7 +125,7 @@ export const en = {
 	'settings.name-mode.desc': 'Show names in the file explorer, tabs and note titles in this language. Only the display changes, files are never renamed. Names are sent to your translation provider; translations are cached in the cache folder.',
 	'settings.name-attachments': 'Translate attachment names',
 	'settings.name-attachments.desc': 'Also translate the names of images, PDFs and other files that are not notes.',
-	'settings.animate.desc': 'Letters scramble briefly and settle into the translation when it appears. Off when your system asks for reduced motion.',
+	'settings.animate.desc': 'Letters scramble briefly and settle into the translation when it appears.',
 	'settings.status-bar': 'Show status bar item',
 	'settings.status-bar.desc': 'Shows OG / EN / DE for the active note.',
 

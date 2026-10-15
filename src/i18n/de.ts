@@ -113,7 +113,7 @@ export const de: Record<StringKey, string> = {
 	'settings.name-mode.desc': 'Zeigt Namen im Datei-Explorer, in Tabs und in Notiztiteln in dieser Sprache an. Nur die Anzeige ändert sich, Dateien werden nie umbenannt. Die Namen werden an deinen Übersetzungsanbieter gesendet; Übersetzungen liegen im Cache-Ordner.',
 	'settings.name-attachments': 'Namen von Anhängen übersetzen',
 	'settings.name-attachments.desc': 'Übersetzt auch die Namen von Bildern, PDFs und anderen Dateien, die keine Notizen sind.',
-	'settings.animate.desc': 'Buchstaben wirbeln kurz durcheinander und werden zur Übersetzung, wenn sie erscheint. Aus, wenn dein System reduzierte Bewegung verlangt.',
+	'settings.animate.desc': 'Buchstaben wirbeln kurz durcheinander und werden zur Übersetzung, wenn sie erscheint.',
 	'settings.status-bar': 'Statusleisten-Element anzeigen',
 	'settings.status-bar.desc': 'Zeigt OG / EN / DE für die aktive Notiz.',
 

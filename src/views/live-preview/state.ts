@@ -38,6 +38,10 @@ export interface TranslationState {
 	/** Text typed recently; the sentence under the caret inside it is shown as typed. */
 	typed: { from: number; to: number } | null;
 	session: EditSession | null;
+	/** Until this time (ms since epoch) a mode switch may animate sentences that do not change. */
+	animateUntil: number;
+	/** The switch left a translated mode: the originals animate back in. */
+	leaving: boolean;
 	decorations: DecorationSet;
 	/** Replace decorations only: the caret skips over these. */
 	atomic: DecorationSet;
@@ -51,6 +55,9 @@ export const endSessionEffect = StateEffect.define<null>();
 /** Marks transactions written by this plugin (edit sessions, confirmed deletes). */
 export const ownChange = Annotation.define<boolean>();
 
+/** How long after a mode switch unchanged sentences may animate. */
+export const ANIMATION_WINDOW_MS = 900;
+
 /** User event of edits applied by an edit session. */
 export const SESSION_USER_EVENT = 'input.transparent-translate';
 
@@ -60,6 +67,8 @@ export const INACTIVE: Omit<TranslationState, 'path' | 'mode'> = {
 	missing: false,
 	typed: null,
 	session: null,
+	animateUntil: 0,
+	leaving: false,
 	decorations: Decoration.none,
 	atomic: Decoration.none,
 };

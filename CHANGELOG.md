@@ -4,6 +4,20 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-15
+
+### Changed
+
+- The decode animation no longer follows the system's reduced-motion setting; the **Animate translations** toggle is the only switch.
+- The animation plays between all modes: Original ↔ English ↔ German, including text that does not change (for example German text when switching to German) and back to the original, in Reading view and Live Preview.
+
+### Fixed
+
+- A sentence that starts with a link or code span after a full stop (`… steht in [[Notiz]]. `Datei.pdf` liegt …`) is no longer glued to the previous sentence.
+- German text with English terms that a model reports as "mixed" is recognised as German when local detection is sure, so German mode keeps your wording instead of a rewrite (for example `Moore's Law` stays).
+- After clearing or moving the translation cache, notes no longer stay stuck on "pending" until they are reopened.
+- The translation prompt asks for consistent terms and for "mixed" only when a sentence really has phrases in both languages.
+
 ## [0.2.0] - 2026-10-15
 
 ### Added
@@ -42,7 +56,8 @@ First release.
 - View-only mode on mobile (no requests, no key).
 - English and German interface.
 
-[Unreleased]: https://github.com/CodingJinxx/transparent-translate/compare/0.2.0...HEAD
+[Unreleased]: https://github.com/CodingJinxx/transparent-translate/compare/0.2.1...HEAD
+[0.2.1]: https://github.com/CodingJinxx/transparent-translate/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/CodingJinxx/transparent-translate/compare/0.1.1...0.2.0
 [0.1.1]: https://github.com/CodingJinxx/transparent-translate/compare/0.1.0...0.1.1
 [0.1.0]: https://github.com/CodingJinxx/transparent-translate/releases/tag/0.1.0

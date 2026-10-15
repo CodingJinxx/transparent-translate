@@ -1,4 +1,4 @@
-import { detectLanguage } from '../core/language';
+import { detectLanguage, refineLanguage } from '../core/language';
 import { isTranslatableName, nameKey, validateNameTranslation } from '../core/names';
 import { normalizeSentence } from '../core/text';
 import type { TargetLanguage } from '../core/types';
@@ -97,7 +97,7 @@ export class NameService {
 
 	private alreadyInTarget(stem: string, hash: string, target: TargetLanguage): boolean {
 		const lang = this.deps.store.get(hash)?.lang;
-		if (lang !== undefined) return lang === target;
+		if (lang !== undefined && lang !== 'mixed') return lang === target;
 		return detectLanguage(stem) === target;
 	}
 
@@ -203,10 +203,10 @@ export class NameService {
 				const text = item?.ok ? validateNameTranslation(b.stem, item.text, glossary) : null;
 				if (item?.ok && text !== null) {
 					const same = normalizeSentence(text) === normalizeSentence(b.stem);
-					const lang = item.lang ?? (same ? target : undefined);
+					const lang = refineLanguage(item.lang, b.stem) ?? (same ? target : undefined);
 					// The original is the display text for its own language: no request needed later.
 					if ((lang === 'en' || lang === 'de') && lang !== target) this.deps.store.put(b.hash, b.stem, lang, b.stem);
-					this.deps.store.put(b.hash, b.stem, target, text, { model: result.model, translatedAt, ...(lang ? { lang } : {}) });
+					this.deps.store.put(b.hash, b.stem, target, lang === target ? b.stem : text, { model: result.model, translatedAt, ...(lang ? { lang } : {}) });
 					outcome.translated++;
 				} else {
 					this.failures.set(key, item?.ok ? 'Invalid name translation' : (item?.error ?? 'unknown error'));

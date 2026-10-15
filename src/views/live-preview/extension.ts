@@ -6,6 +6,7 @@ import { isTargetLanguage, type DisplayMode, type TargetLanguage } from '../../c
 import type { TranslateHost } from '../../host';
 import { t } from '../../i18n';
 import {
+	ANIMATION_WINDOW_MS,
 	endSessionEffect,
 	INACTIVE,
 	isOwnTransaction,
@@ -46,12 +47,27 @@ export function createLivePreviewExtension(host: TranslateHost): Extension {
 	let field: StateField<TranslationState>;
 	const read = (state: EditorState) => state.field(field, false);
 
-	function compute(state: EditorState, base: Pick<TranslationState, 'mode' | 'typed' | 'session'>): TranslationState {
+	function compute(state: EditorState, base: Pick<TranslationState, 'mode' | 'typed' | 'session' | 'animateUntil' | 'leaving'>): TranslationState {
 		const path = pathOf(state);
 		const livePreview = state.field(editorLivePreviewField, false) ?? false;
 		const mode = base.mode;
-		if (!path || !livePreview || !host.settings.livePreview || !isTargetLanguage(mode) || !host.isTranslatable(path)) {
-			return { ...INACTIVE, path, mode };
+		const { leaving } = base;
+		let animateUntil = base.animateUntil;
+		const animating = host.settings.animateTranslations && Date.now() < animateUntil;
+		if (!path || !livePreview || !host.settings.livePreview || !host.isTranslatable(path)) {
+			return { ...INACTIVE, path, mode, animateUntil, leaving };
+		}
+		if (!isTargetLanguage(mode)) {
+			// Back to the original: the sentences that were translated decode back into the original text.
+			const transient: Array<Range<Decoration>> = [];
+			if (animating && leaving) {
+				for (const s of host.parse(path, state.doc.toString()).sentences) {
+					if (!claimAnimation(animationKey(path, mode, s.hash))) continue;
+					const widget = Decoration.replace({ widget: new SentenceWidget(s.text, s.hash, 'en', host.app, path, sentenceHandlers, true, true, true, 'leave') });
+					transient.push(widget.range(s.from, s.to));
+				}
+			}
+			return { ...INACTIVE, path, mode, animateUntil, leaving, decorations: Decoration.set(transient, true) };
 		}
 		const note = host.parse(path, state.doc.toString());
 		const head = state.selection.main.head;
@@ -59,6 +75,8 @@ export function createLivePreviewExtension(host: TranslateHost): Extension {
 		let typed = base.typed;
 		let typingSentence = false;
 		let missing = false;
+		/** Sentences are still being translated: the animation window stays open until they arrive. */
+		let waiting = false;
 		const ranges: TranslatedRange[] = [];
 		const decorations: Array<Range<Decoration>> = [];
 		const atomic: Array<Range<Decoration>> = [];
@@ -95,6 +113,11 @@ export function createLivePreviewExtension(host: TranslateHost): Extension {
 					break;
 				}
 				case 'same':
+					// Already in the target language: it only animates right after a mode switch.
+					if (animating && claimAnimation(animationKey(path, mode, s.hash))) {
+						const widget = Decoration.replace({ widget: new SentenceWidget(s.text, s.hash, mode, host.app, path, sentenceHandlers, true, true, true, `same:${mode}`) });
+						decorations.push(widget.range(s.from, s.to));
+					}
 					break;
 				case 'failed': {
 					const reason = host.service.failureReason(path, s.hash, mode) ?? '';
@@ -110,6 +133,7 @@ export function createLivePreviewExtension(host: TranslateHost): Extension {
 					}
 					break;
 				case 'pending':
+					waiting = true;
 					decorations.push(Decoration.mark({ class: 'tt-pending', attributes: { title: t('widget.pending') } }).range(s.from, s.to));
 					break;
 			}
@@ -129,6 +153,7 @@ export function createLivePreviewExtension(host: TranslateHost): Extension {
 			atomic.push(widget.range(session.from, session.to));
 		}
 
+		if (waiting || missing) animateUntil = Math.max(animateUntil, Date.now() + ANIMATION_WINDOW_MS);
 		// Once the caret has left the typed sentence, the exemption ends.
 		if (!typingSentence) typed = null;
 		return {
@@ -139,6 +164,8 @@ export function createLivePreviewExtension(host: TranslateHost): Extension {
 			missing,
 			typed,
 			session,
+			animateUntil,
+			leaving,
 			decorations: Decoration.set(decorations, true),
 			atomic: Decoration.set(atomic, true),
 		};
@@ -146,14 +173,20 @@ export function createLivePreviewExtension(host: TranslateHost): Extension {
 
 	field = StateField.define<TranslationState>({
 		create(state) {
-			return compute(state, { mode: leafMode(host, state), typed: null, session: null });
+			const mode = leafMode(host, state);
+			// Opening a note in a translated mode animates like switching to it.
+			return compute(state, { mode, typed: null, session: null, animateUntil: isTargetLanguage(mode) ? Date.now() + ANIMATION_WINDOW_MS : 0, leaving: false });
 		},
 		update(value, tr) {
-			let { mode, typed, session } = value;
+			let { mode, typed, session, animateUntil, leaving } = value;
 			let changed = tr.docChanged || tr.selection !== undefined;
 			for (const effect of tr.effects) {
 				if (effect.is(setModeEffect)) {
-					if (effect.value !== mode) session = null;
+					if (effect.value !== mode) {
+						session = null;
+						animateUntil = Date.now() + ANIMATION_WINDOW_MS;
+						leaving = isTargetLanguage(mode) && effect.value === 'original';
+					}
 					mode = effect.value;
 					changed = true;
 				} else if (effect.is(refreshEffect)) {
@@ -181,7 +214,7 @@ export function createLivePreviewExtension(host: TranslateHost): Extension {
 				}
 			}
 			if (!changed) return value;
-			return compute(tr.state, { mode, typed, session });
+			return compute(tr.state, { mode, typed, session, animateUntil, leaving });
 		},
 		provide: (f) => [EditorView.decorations.from(f, (v) => v.decorations), EditorView.atomicRanges.of((view) => view.state.field(f, false)?.atomic ?? Decoration.none)],
 	});

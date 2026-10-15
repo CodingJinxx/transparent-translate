@@ -1,7 +1,7 @@
 import type { SentenceDisplay } from '../core/compose';
 import { placeholdersValid, restore } from '../core/protect';
 import { normalizeSentence } from '../core/text';
-import { detectLanguage } from '../core/language';
+import { detectLanguage, refineLanguage } from '../core/language';
 import type { NoteModel, Sentence, TargetLanguage } from '../core/types';
 import type { Translator } from '../translator/translator';
 import { TranslatorError } from '../translator/translator';
@@ -62,6 +62,7 @@ export class TranslationService {
 	private readonly inflight = new Map<string, Set<string>>();
 	private readonly failures = new Map<string, Map<string, string>>();
 	private readonly loadsRequested = new Set<string>();
+	private loadsEpoch = 0;
 	private readonly listeners = new Set<Listener>();
 	private readonly semaphore: Semaphore;
 	private controller = new AbortController();
@@ -98,12 +99,17 @@ export class TranslationService {
 	 */
 	private alreadyInTarget(notePath: string, sentence: Sentence, target: TargetLanguage): boolean {
 		const lang = this.deps.store.peek(notePath)?.sentences[sentence.hash]?.lang;
-		if (lang !== undefined) return lang === target;
+		if (lang !== undefined && lang !== 'mixed') return lang === target;
 		return detectLanguage(sentence.masked) === target;
 	}
 
 	/** What a sentence should show in `target` mode right now. Synchronous. */
 	display(notePath: string, sentence: Sentence, target: TargetLanguage): SentenceDisplay {
+		if (this.loadsEpoch !== this.deps.store.epoch) {
+			// The store dropped its caches (cache cleared or moved): request loads again.
+			this.loadsEpoch = this.deps.store.epoch;
+			this.loadsRequested.clear();
+		}
 		if (!this.deps.store.isLoaded(notePath)) {
 			if (!this.loadsRequested.has(notePath)) {
 				this.loadsRequested.add(notePath);
@@ -152,7 +158,10 @@ export class TranslationService {
 	): Promise<TranslateOutcome> {
 		const outcome: TranslateOutcome = { translated: 0, failed: 0 };
 		if (!this.canTranslate) return outcome;
+		const wasLoaded = this.deps.store.isLoaded(notePath);
 		await this.deps.store.load(notePath);
+		// Views that were waiting for the cache (showing sentences as pending) need to redraw.
+		if (!wasLoaded) this.emit(notePath);
 
 		const k = key(notePath, target);
 		const inflight = this.inflight.get(k) ?? new Set<string>();
@@ -226,12 +235,14 @@ export class TranslationService {
 				const item = result.items[i];
 				if (item?.ok) {
 					const same = normalizeSentence(item.text) === normalizeSentence(s.masked);
-					const lang = item.lang ?? (same ? target : undefined);
+					const lang = refineLanguage(item.lang, s.masked) ?? (same ? target : undefined);
+					// Already in the target language: keep the original wording, whatever the model wrote.
+					const text = lang === target ? s.masked : item.text;
 					// The original is the display text for its own language: no request needed later.
 					if (lang === 'en' || lang === 'de') {
 						if (lang !== target) this.deps.store.put(notePath, s.hash, lang, s.masked);
 					}
-					this.deps.store.put(notePath, s.hash, target, item.text, {
+					this.deps.store.put(notePath, s.hash, target, text, {
 						model: result.model,
 						translatedAt,
 						...(lang ? { lang } : {}),

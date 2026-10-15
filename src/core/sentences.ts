@@ -170,6 +170,15 @@ const CLOSING_MARKER = /^(?:\*{1,3}|_{1,3}|~~|==)(?=\s)/;
 const DATE_CONTINUATION =
 	/^(?:\d|Jan|Feb|M[aä]r|Apr|Ma[iy]|Jun|Jul|Aug|Sep|O[ck]t|Nov|De[cz])/;
 
+/** Offsets of placeholders that directly follow sentence-ending punctuation and a space. */
+function placeholderSentenceStarts(masked: string): number[] {
+	const starts: number[] = [];
+	const re = /[.!?]+["'”’)\]]*\s+(?=⟦)/g;
+	let m: RegExpExecArray | null;
+	while ((m = re.exec(masked))) starts.push(m.index + m[0].length);
+	return starts;
+}
+
 /** The segmenter may break inside a placeholder (`⟦` | `2⟧`): move such a boundary behind it. */
 function outsidePlaceholder(masked: string, index: number): number {
 	if (index <= 0) return index;
@@ -184,7 +193,9 @@ export function splitSentences(text: string, unit: Unit, opts: SegmentOptions): 
 	const unitText = text.slice(unit.from, unit.to);
 	const masked = protect(unitText, opts.protect);
 	segmenter ??= defaultSegmenter();
-	const starts = segmenter(masked.masked);
+	// The segmenter does not break before a placeholder that is followed by a lowercase word
+	// ("… steht in ⟦1⟧. ⟦2⟧ liegt …"), although a link or code span can start a sentence.
+	const starts = [...new Set([...segmenter(masked.masked), ...placeholderSentenceStarts(masked.masked)])].sort((x, y) => x - y);
 
 	// Merge segments that were split after an abbreviation or before a lowercase continuation.
 	const merged: number[] = [];

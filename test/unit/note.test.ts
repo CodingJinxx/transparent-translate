@@ -153,6 +153,8 @@ describe('sentence splitting', () => {
 		['bold lead-in ending in a period', '- **SW und HW gehören zusammen (Folien 4–6).** Software abstrahiert. Ende.', ['**SW und HW gehören zusammen (Folien 4–6).**', 'Software abstrahiert.', 'Ende.']],
 		['italic lead-in', '*Wichtig (Folie 3).* Rest des Satzes.', ['*Wichtig (Folie 3).*', 'Rest des Satzes.']],
 		['highlight and strike lead-ins', '==Merke.== Dann ~~Alt.~~ Neu.', ['==Merke.==', 'Dann ~~Alt.~~', 'Neu.']],
+		['abbreviation before a link stays together', 'Das gilt z. B. [[Notiz]] hier. Ende.', ['Das gilt z. B. [[Notiz]] hier.', 'Ende.']],
+		['a link after a full stop starts a sentence', 'Siehe unten. [[Notiz]] liegt dort.', ['Siehe unten.', '[[Notiz]] liegt dort.']],
 		['bold ending with a colon stays whole', '**Software:** GNU-Toolchain. Mehr.', ['**Software:** GNU-Toolchain.', 'Mehr.']],
 	])('handles %s', (_name, source, expected) => {
 		expect(texts(source)).toEqual(expected);

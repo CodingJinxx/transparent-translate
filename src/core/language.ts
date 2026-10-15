@@ -24,6 +24,16 @@ const WORD = /[\p{L}']+/gu;
 const GERMAN_LETTERS = /[äöüßÄÖÜ]/;
 
 /**
+ * Combines what the model reported with local detection. Models like to call
+ * German text with English terms "mixed"; when local detection is sure about
+ * one language, that wins over a "mixed" report.
+ */
+export function refineLanguage(reported: SourceLanguage | undefined, masked: string): SourceLanguage | undefined {
+	if (reported !== 'mixed') return reported;
+	return detectLanguage(masked) ?? 'mixed';
+}
+
+/**
  * Conservative local language detection for one sentence. Returns a
  * language only when the signal is clear; otherwise null, and the model
  * decides. A wrong answer would leave a sentence untranslated, so it errs on

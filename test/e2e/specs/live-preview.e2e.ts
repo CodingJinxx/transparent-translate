@@ -149,4 +149,20 @@ describe('Live Preview', function () {
 		expect(await editorValue()).toBe(ORIGINAL);
 		await browser.keys('Escape');
 	});
+
+	it('animates between all modes and leaves plain editor text behind', async function () {
+		await configure({ animateTranslations: true });
+		const decoding = () => browser.execute(() => document.querySelectorAll('.workspace-leaf.mod-active .cm-content .tt-decoding').length);
+		for (const [i, next] of (['show-german', 'show-english', 'show-original', 'show-german'] as const).entries()) {
+			await command(next);
+			await browser.waitUntil(async () => (await decoding()) > 0, { interval: 20, timeoutMsg: `no animation when switching with ${next} (step ${i + 1})` });
+			// The animation is purely visual: the document never changes.
+			expect(await editorValue()).toBe(ORIGINAL);
+			await browser.waitUntil(async () => (await decoding()) === 0, { timeoutMsg: 'animation did not finish' });
+		}
+		// German original: no widgets are left once the animation is over.
+		await browser.waitUntil(async () => (await widgetTexts()).length === 0, { timeoutMsg: 'transient widgets were not removed' });
+		expect(await readFile(NOTE)).toBe(ORIGINAL);
+		await configure();
+	});
 });

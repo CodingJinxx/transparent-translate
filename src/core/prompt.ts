@@ -51,6 +51,8 @@ export function systemPrompt(target: TargetLanguage, jsonMode: boolean): string 
 		'- Placeholders like ⟦1⟧ stand for links, code, math or tags. Copy every placeholder of a sentence unchanged into that sentence\'s translation, exactly once each. Never add placeholders.',
 		'- Keep Markdown inline formatting (**bold**, *italic*, ~~strike~~) and punctuation style.',
 		'- Keep the glossary terms exactly as written.',
+		'- Translate a term that recurs in the notes the same way every time, and keep the capitalization style of the input.',
+		'- Report {mixed} only when one sentence has whole phrases in both languages. A sentence with just loanwords, technical terms, product names or quotes of the other language is {de} or {en}, and keeps those words as they are.',
 		'- Each input sentence becomes exactly one output sentence. Never merge or split sentences.',
 		output,
 	].join('\n');
