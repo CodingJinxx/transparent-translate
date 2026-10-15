@@ -59,7 +59,7 @@ export const de: Record<StringKey, string> = {
 	'session.dont-ask': 'Für diese Notiz nicht mehr fragen',
 	'session.input-label': 'Übersetzten Satz bearbeiten',
 	'session.hint-enter': 'Enter',
-	'session.hint-alt-enter': 'Alt+Enter',
+	'session.hint-alt-enter': 'Strg+Umschalt+Enter',
 	'session.hint-esc': 'Esc',
 
 	'widget.pending': 'Wird übersetzt…',

@@ -1,10 +1,12 @@
-import { Component, MarkdownRenderer, type App } from 'obsidian';
+import { Component, Keymap, MarkdownRenderer, Platform, type App } from 'obsidian';
 import { WidgetType, type EditorView } from '@codemirror/view';
 import type { TargetLanguage } from '../../core/types';
 import { t } from '../../i18n';
 import type { EditSession } from './state';
 
 const components = new WeakMap<HTMLElement, Component>();
+/** Removes the window key listener of an edit session widget. */
+const keyListeners = new WeakMap<HTMLElement, () => void>();
 
 /**
  * Renders inline Markdown (links, bold, math) into `target`. A single
@@ -149,7 +151,7 @@ export class SessionWidget extends WidgetType {
 				});
 			};
 			button(t('session.replace', { target: labels.target }), t('session.hint-enter'), 'mod-cta', () => handlers.apply(view, session.id, input.value, dontAsk));
-			button(t('session.edit-original', { sourceName: labels.sourceName }), t('session.hint-alt-enter'), '', () =>
+			button(t('session.edit-original', { sourceName: labels.sourceName }), Platform.isMacOS ? '⌘⇧↵' : t('session.hint-alt-enter'), '', () =>
 				handlers.editOriginal(view, session.id, dontAsk),
 			);
 			button(t('session.cancel'), t('session.hint-esc'), '', () => handlers.cancel(view, session.id));
@@ -159,24 +161,65 @@ export class SessionWidget extends WidgetType {
 			checkbox.addEventListener('change', () => (dontAsk = checkbox.checked));
 		}
 
-		input.addEventListener('keydown', (event) => {
-			event.stopPropagation();
+		// Keys are caught on the window in the capture phase, before Obsidian's own
+		// handlers: some Obsidian versions move focus away on Escape, which would
+		// otherwise count as "clicking elsewhere" and apply the edit.
+		const win = wrap.win;
+		const onKey = (event: KeyboardEvent) => {
+			// While the session is open its keys also apply when focus slipped back to this editor.
+			const active = win.document.activeElement;
+			if (event.isComposing || !wrap.isConnected || !(active === input || (active && view.dom.contains(active)))) return;
 			if (event.key === 'Escape') {
 				event.preventDefault();
+				event.stopPropagation();
 				handlers.cancel(view, session.id);
-			} else if (event.key === 'Enter' && event.altKey) {
+			} else if (event.key === 'Enter' && ((Keymap.isModEvent(event) && event.shiftKey) || event.altKey)) {
+				// Mod+Shift+Enter (Alt+Enter also works where the OS delivers it).
 				event.preventDefault();
+				event.stopPropagation();
 				handlers.editOriginal(view, session.id, dontAsk);
 			} else if (event.key === 'Enter' && !event.shiftKey) {
 				event.preventDefault();
+				event.stopPropagation();
 				handlers.apply(view, session.id, input.value, dontAsk);
 			}
+		};
+		win.addEventListener('keydown', onKey, true);
+		keyListeners.set(wrap, () => win.removeEventListener('keydown', onKey, true));
+		// Other keys must not reach the editor's keymap.
+		input.addEventListener('keydown', (event) => event.stopPropagation());
+		// "Clicking elsewhere" means a real pointer press outside the session.
+		// Focus moving to the editor on its own (after an update, or when the
+		// window regains focus) is not a decision: the input just takes focus back.
+		const onPointer = (event: PointerEvent) => {
+			if (!wrap.isConnected || wrap.contains(event.target as Node)) return;
+			handlers.leave(view, session.id, input.value);
+		};
+		win.addEventListener('pointerdown', onPointer, true);
+		const removeKeys = keyListeners.get(wrap);
+		keyListeners.set(wrap, () => {
+			removeKeys?.();
+			win.removeEventListener('pointerdown', onPointer, true);
 		});
 		wrap.addEventListener('focusout', (event) => {
-			const next = event.relatedTarget as Node | null;
+			const next = event.relatedTarget as HTMLElement | null;
 			if (next && wrap.contains(next)) return;
-			handlers.leave(view, session.id, input.value);
+			// Tab (or a shortcut) moved focus to another control outside the editor: that is leaving.
+			if (next && !view.dom.contains(next)) {
+				handlers.leave(view, session.id, input.value);
+				return;
+			}
+			win.setTimeout(() => {
+				if (wrap.isConnected && win.document.hasFocus() && win.document.activeElement !== input) input.focus();
+			}, 0);
 		});
+		win.addEventListener(
+			'focus',
+			() => {
+				if (wrap.isConnected) input.focus();
+			},
+			{ once: true },
+		);
 
 		window.requestAnimationFrame(() => {
 			input.focus();
@@ -184,6 +227,11 @@ export class SessionWidget extends WidgetType {
 			else input.setSelectionRange(input.value.length, input.value.length);
 		});
 		return wrap;
+	}
+
+	override destroy(dom: HTMLElement): void {
+		keyListeners.get(dom)?.();
+		keyListeners.delete(dom);
 	}
 
 	override ignoreEvent(): boolean {

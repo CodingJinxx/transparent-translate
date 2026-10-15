@@ -49,12 +49,22 @@ export async function configure(extra: Partial<TransparentTranslateSettings> = {
 
 /** Resets vault files, closes all tabs and forgets in-memory caches. */
 export async function freshVault(): Promise<void> {
+	// Close notes first: closing flushes pending editor saves, which would
+	// otherwise overwrite the reset files a moment later.
+	await browser.executeObsidian(async ({ app }) => {
+		const leaves: Array<{ detach(): void }> = [];
+		app.workspace.iterateAllLeaves((leaf) => {
+			if (leaf.view.getViewType() === 'markdown') leaves.push(leaf);
+		});
+		for (const leaf of leaves) leaf.detach();
+		await new Promise((resolve) => setTimeout(resolve, 200));
+	});
 	await obsidianPage.resetVault();
 	await browser.executeObsidian(async ({ app, plugins }) => {
-		app.workspace.iterateAllLeaves((leaf) => {
-			if (leaf.view.getViewType() === 'markdown') leaf.detach();
-		});
 		const plugin = plugins.transparentTranslate;
+		// resetVault() also removes the plugin folder (the test vault has no .obsidian); recreate it so saveData works.
+		const dir = plugin.manifest.dir!;
+		if (!(await app.vault.adapter.exists(dir))) await app.vault.adapter.mkdir(dir);
 		plugin.service.cancelAll();
 		plugin.service.clearFailures();
 		plugin.store.reset();

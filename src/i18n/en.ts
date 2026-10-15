@@ -65,7 +65,7 @@ export const en = {
 	'session.dont-ask': "Don't ask again for this note",
 	'session.input-label': 'Edit translated sentence',
 	'session.hint-enter': 'Enter',
-	'session.hint-alt-enter': 'Alt+Enter',
+	'session.hint-alt-enter': 'Ctrl+Shift+Enter',
 	'session.hint-esc': 'Esc',
 
 	// Widget and menu

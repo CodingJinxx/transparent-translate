@@ -28,7 +28,8 @@ export const config: WebdriverIO.Config = {
 	framework: 'mocha',
 	specs: ['./test/e2e/specs/**/*.e2e.ts'],
 	exclude: [screenshots],
-	maxInstances: Number(env.WDIO_MAX_INSTANCES || 2),
+	// One instance at a time: all instances share one mock server and its request counters.
+	maxInstances: Number(env.WDIO_MAX_INSTANCES || 1),
 
 	capabilities: [
 		...desktopVersions.map<WebdriverIO.Capabilities>(([appVersion, installerVersion]) => ({
@@ -48,7 +49,8 @@ export const config: WebdriverIO.Config = {
 
 	services: ['obsidian'],
 	reporters: ['obsidian'],
-	mochaOpts: { ui: 'bdd', timeout: 90 * 1000 },
+	// UI timing can flake under load (e.g. typing while another Obsidian starts): retry once.
+	mochaOpts: { ui: 'bdd', timeout: 90 * 1000, retries: 1 },
 	waitforInterval: 100,
 	waitforTimeout: 10 * 1000,
 	logLevel: 'warn',

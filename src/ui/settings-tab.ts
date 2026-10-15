@@ -136,23 +136,22 @@ export class TransparentTranslateSettingTab extends PluginSettingTab {
 				text.inputEl.addClass('tt-wide-input');
 			});
 
-		const modelSetting = new Setting(el)
-			.setName(t('settings.model'))
-			.setDesc(t('settings.model.desc'))
-			.addText((text) => {
-				text
-					.setPlaceholder(preset.modelHint)
-					.setValue(this.settings.model)
-					.onChange(async (value) => {
-						this.settings.model = value.trim();
-						await this.save();
-					});
-				modelSetting.controlEl.addClass('tt-model-control');
-				const fetchButton = modelSetting.controlEl.createEl('button', { text: t('settings.fetch-models') });
-				fetchButton.addEventListener('click', () => void this.fetchModels(fetchButton, modelSetting.controlEl, (id) => {
-					text.setValue(id);
-				}));
-			});
+		// Build the setting first: its callbacks below need `modelSetting` to exist.
+		const modelSetting = new Setting(el).setName(t('settings.model')).setDesc(t('settings.model.desc'));
+		modelSetting.controlEl.addClass('tt-model-control');
+		modelSetting.addText((text) => {
+			text
+				.setPlaceholder(preset.modelHint)
+				.setValue(this.settings.model)
+				.onChange(async (value) => {
+					this.settings.model = value.trim();
+					await this.save();
+				});
+			const fetchButton = modelSetting.controlEl.createEl('button', { text: t('settings.fetch-models') });
+			fetchButton.addEventListener('click', () => void this.fetchModels(fetchButton, modelSetting.controlEl, (id) => {
+				text.setValue(id);
+			}));
+		});
 
 		new Setting(el)
 			.setName(t('settings.api-key'))

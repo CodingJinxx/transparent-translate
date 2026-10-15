@@ -5,6 +5,7 @@ import { composeRange } from '../../core/compose';
 import { isTargetLanguage, type DisplayMode, type TargetLanguage } from '../../core/types';
 import type { TranslateHost } from '../../host';
 import { t } from '../../i18n';
+import { log } from '../../log';
 import {
 	endSessionEffect,
 	INACTIVE,
