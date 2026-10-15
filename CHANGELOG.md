@@ -6,7 +6,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
-- Funding link (Buy Me a Coffee) in `manifest.json`, the README, the website and GitHub's Sponsor button. The manifest entry reaches users with the next release.
+- Funding link (Buy Me a Coffee) in `manifest.json`, the README, the website and GitHub's Sponsor button. The manifest entry reaches users with the next release. The website now shows the Buy Me a Coffee button widget (the only script it loads from another site).
 
 ## [0.4.4] - 2026-10-15
 
