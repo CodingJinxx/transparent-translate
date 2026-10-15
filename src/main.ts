@@ -1,4 +1,4 @@
-import { editorInfoField, getAllTags, getLanguage, MarkdownView, normalizePath, Notice, Platform, Plugin, requestUrl, setIcon, TFile, type WorkspaceLeaf } from 'obsidian';
+import { addIcon, editorInfoField, getAllTags, getLanguage, MarkdownView, normalizePath, Notice, Platform, Plugin, requestUrl, setIcon, TFile, type WorkspaceLeaf } from 'obsidian';
 import type { EditorView } from '@codemirror/view';
 import { createResolver, type NoteContext, type TermResolver } from './core/glossary-match';
 import { NoteParser, parseNote } from './core/note';
@@ -23,6 +23,7 @@ import { TranslatorError } from './translator/translator';
 import { LlmTranslator, parseExtraBody, parseHeaderLines, type HttpClient, type LlmConfig } from './translator/llm-translator';
 import { registerCommands } from './commands';
 import { ConfirmModal } from './ui/confirm-modal';
+import { ICON_ID, ICON_SVG } from './ui/icon';
 import { CorrectionModal } from './ui/correction-modal';
 import { TransparentTranslateSettingTab } from './ui/settings-tab';
 import { NameDisplayController } from './views/name-display';
@@ -63,6 +64,7 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 
 	override async onload(): Promise<void> {
 		setLanguage(getLanguage());
+		addIcon(ICON_ID, ICON_SVG);
 		await this.loadSettings();
 
 		this.store = new CacheStore(new VaultCacheBackend(this.app), {
@@ -485,7 +487,7 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 			const view = leaf.view;
 			if (!(view instanceof MarkdownView)) continue;
 			if (!this.headerActions.has(view)) {
-				const action = view.addAction('languages', t('command.cycle'), () => this.cycleMode(view.leaf));
+				const action = view.addAction(ICON_ID, t('command.cycle'), () => this.cycleMode(view.leaf));
 				action.addClass('tt-header-action');
 				this.headerActions.set(view, action);
 			}
@@ -534,7 +536,7 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 		const mode = this.modes.get(view.leaf, path);
 		el.empty();
 		const icon = el.createSpan({ cls: 'tt-status-icon' });
-		setIcon(icon, 'languages');
+		setIcon(icon, ICON_ID);
 		(['original', 'en', 'de'] as const).forEach((m, i) => {
 			if (i > 0) el.createSpan({ cls: 'tt-status-sep', text: '·' });
 			el.createSpan({ cls: m === mode ? 'tt-status-mode is-active' : 'tt-status-mode', text: t(`mode.short.${m}`) });

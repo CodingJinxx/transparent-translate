@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/images/icon.svg" width="128" alt=""></p>
+
 <h1 align="center">Transparent Translate</h1>
 
 <p align="center">

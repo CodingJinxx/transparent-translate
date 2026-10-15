@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+
+- New plugin icon: the language button in note headers and the status bar item use it (one colour, follows the theme). The full-colour icon is in `docs/images/icon.svg` and shown in the README.
+
 ## [0.4.1] - 2026-10-15
 
 ### Fixed
