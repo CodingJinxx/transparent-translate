@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-10-15
+
 ### Changed
 
 - Styles: no `!important` and no `text-decoration` (failed and missing sentences use a dotted bottom border), as flagged by the Obsidian review.
@@ -99,7 +101,8 @@ First release.
 - View-only mode on mobile (no requests, no key).
 - English and German interface.
 
-[Unreleased]: https://github.com/CodingJinxx/transparent-translate/compare/0.4.2...HEAD
+[Unreleased]: https://github.com/CodingJinxx/transparent-translate/compare/0.4.3...HEAD
+[0.4.3]: https://github.com/CodingJinxx/transparent-translate/compare/0.4.2...0.4.3
 [0.4.2]: https://github.com/CodingJinxx/transparent-translate/compare/0.4.1...0.4.2
 [0.4.1]: https://github.com/CodingJinxx/transparent-translate/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/CodingJinxx/transparent-translate/compare/0.3.0...0.4.0
