@@ -14,6 +14,14 @@ updates:
       - dependency-name: obsidian
       # Must match the versions Obsidian bundles.
       - dependency-name: '@codemirror/*'
+      # wdio-obsidian-service peers webdriverio ^9, and @wdio/mocha-framework ships its own
+      # mocha: a second, newer top-level mocha breaks loading the specs. Bump these with the service.
+      - dependency-name: '@wdio/*'
+        update-types: ['version-update:semver-major']
+      - dependency-name: webdriverio
+        update-types: ['version-update:semver-major']
+      - dependency-name: mocha
+        update-types: ['version-update:semver-major']
   - package-ecosystem: github-actions
     directory: /
     schedule:
