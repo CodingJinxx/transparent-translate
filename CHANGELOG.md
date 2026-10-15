@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- Showcase: a demo GIF at the top of the README and a website on GitHub Pages with the demo, the features, install steps and optional background music made with Strudel. `npm run demo` records the demo in a sandboxed Obsidian with the mock translator (see `docs/showcase.md`).
+
 ## [0.4.3] - 2026-10-15
 
 ### Changed

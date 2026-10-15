@@ -42,6 +42,7 @@ test/
   live/          Optional test against a real endpoint
   fixtures/      Sample notes (byte-exact, some with CRLF line endings)
   vaults/e2e/    The e2e test vault
+site/            The showcase website on GitHub Pages (see docs/showcase.md)
 ```
 
 ## Tests
