@@ -7,6 +7,8 @@ export default defineConfig(
 		'node_modules',
 		'dist',
 		'coverage',
+		'.obsidian-cache',
+		'.wdio-vaults',
 		'eslint.config.mts',
 		'esbuild.config.mjs',
 		'version-bump.mjs',
