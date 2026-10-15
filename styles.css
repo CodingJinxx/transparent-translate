@@ -258,3 +258,123 @@
 	color: var(--text-accent);
 	transition: color 300ms ease-out;
 }
+
+/* ---- Glossary ---- */
+
+.tt-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--size-4-1);
+	margin-bottom: var(--size-4-3);
+}
+
+.tt-chip {
+	padding: var(--size-2-1) var(--size-4-2);
+	height: auto;
+}
+
+.tt-chip.is-selected {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.tt-correction-block {
+	margin-bottom: var(--size-4-2);
+}
+
+.tt-correction-label {
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+	margin-bottom: var(--size-2-1);
+}
+
+.tt-correction-text {
+	padding: var(--size-4-2);
+	background-color: var(--background-secondary);
+	border-radius: var(--radius-s);
+}
+
+.tt-glossary-modal {
+	width: min(720px, 92vw);
+}
+
+/* ---- User guide ---- */
+
+.tt-guide-modal {
+	width: min(900px, 94vw);
+	height: min(680px, 88vh);
+}
+
+.tt-guide {
+	display: flex;
+	gap: var(--size-4-4);
+	height: 100%;
+	min-height: 0;
+}
+
+.tt-guide-nav {
+	display: flex;
+	flex: 0 0 200px;
+	flex-direction: column;
+	gap: var(--size-2-1);
+	overflow-y: auto;
+}
+
+.tt-guide-nav-item {
+	flex: 0 0 auto;
+	justify-content: flex-start;
+	text-align: left;
+	height: auto;
+	padding: var(--size-2-2) var(--size-4-2);
+	background-color: transparent;
+	box-shadow: none;
+}
+
+.tt-guide-nav-item.is-active {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-accent);
+}
+
+.tt-guide-main {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
+}
+
+.tt-guide-body {
+	flex: 1;
+	overflow-y: auto;
+	padding-right: var(--size-4-2);
+}
+
+.tt-guide-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--size-4-2);
+	padding-top: var(--size-4-2);
+}
+
+.tt-guide-footer .setting-item {
+	border: 0;
+	padding: 0;
+}
+
+@media (max-width: 600px) {
+	.tt-guide {
+		flex-direction: column;
+	}
+
+	.tt-guide-nav {
+		flex: 0 0 auto;
+		flex-direction: row;
+		flex-wrap: nowrap;
+		overflow-x: auto;
+	}
+
+	.tt-guide-nav-item {
+		white-space: nowrap;
+	}
+}

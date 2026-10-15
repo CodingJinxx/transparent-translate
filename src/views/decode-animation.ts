@@ -40,10 +40,6 @@ export function resetAnimations(path: string): void {
 	for (const key of [...shown.keys()]) if (key.startsWith(prefix)) shown.delete(key);
 }
 
-export function prefersReducedMotion(win: Window): boolean {
-	return win.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-}
-
 function randomLike(ch: string): string {
 	if (!/\p{L}/u.test(ch)) return ch;
 	const pool = ch === ch.toUpperCase() && ch !== ch.toLowerCase() ? UPPER : LOWER;
@@ -60,7 +56,6 @@ interface Track {
 /** Runs the decode animation on all text inside `el`. */
 export function decode(el: HTMLElement, durationMs = 650): void {
 	const win = el.win;
-	if (prefersReducedMotion(win)) return;
 	const tracks: Track[] = [];
 	const walker = el.doc.createTreeWalker(el, NodeFilter.SHOW_TEXT);
 	let total = 0;

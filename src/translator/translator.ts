@@ -1,5 +1,6 @@
 import type { TargetLanguage } from '../core/types';
 import type { SourceLanguage } from '../core/language';
+import type { PromptTerms } from '../core/glossary-match';
 
 export interface TranslationItem {
 	/** Sentence text with protected spans replaced by `⟦n⟧`. */
@@ -13,6 +14,10 @@ export interface TranslationContext {
 	glossary: readonly string[];
 	/** Masked surrounding text for context, never translated. */
 	context?: readonly string[];
+	/** `names` translates file and folder names instead of sentences. */
+	purpose?: 'sentences' | 'names';
+	/** Learned terminology that applies to this batch. */
+	terms?: PromptTerms;
 }
 
 export interface TokenUsage {

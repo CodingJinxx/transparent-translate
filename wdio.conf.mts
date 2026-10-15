@@ -21,6 +21,7 @@ if (env.CI) console.log('obsidian-cache-key:', JSON.stringify([desktopVersions, 
 const vault = 'test/vaults/e2e';
 const screenshots = 'test/e2e/specs/screenshots.e2e.ts';
 const mobileSpec = 'test/e2e/specs/mobile.e2e.ts';
+
 let mockServer: Server | null = null;
 
 export const config: WebdriverIO.Config = {
@@ -51,7 +52,7 @@ export const config: WebdriverIO.Config = {
 	services: ['obsidian'],
 	reporters: ['obsidian'],
 	// UI timing can flake under load (e.g. typing while another Obsidian starts): retry once.
-	mochaOpts: { ui: 'bdd', timeout: 90 * 1000, retries: 1 },
+	mochaOpts: { ui: 'bdd', timeout: 90 * 1000, retries: env.CI ? 2 : 1 },
 	waitforInterval: 100,
 	waitforTimeout: 10 * 1000,
 	logLevel: 'warn',

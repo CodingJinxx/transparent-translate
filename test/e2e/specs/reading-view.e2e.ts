@@ -104,6 +104,21 @@ describe('Reading view', function () {
 		await configure();
 	});
 
+	it('animates between all modes, including text that does not change', async function () {
+		await configure({ animateTranslations: true });
+		await openNote('Edit.md', 'preview');
+		const decoding = () => browser.execute(() => document.querySelectorAll('.tt-decoding').length);
+		const settled = () => browser.waitUntil(async () => (await decoding()) === 0, { timeoutMsg: 'animation did not finish' });
+		for (const next of ['show-german', 'show-english', 'show-original', 'show-german'] as const) {
+			await command(next);
+			await browser.waitUntil(async () => (await decoding()) > 0, { interval: 20, timeoutMsg: `no animation when switching with ${next}` });
+			await settled();
+		}
+		// The German original is shown unchanged once everything settled.
+		expect(await readingText()).toContain('Das ist der erste Satz.');
+		await configure();
+	});
+
 	it('keeps excluded folders untranslated', async function () {
 		await configure({ excludedFolders: 'Private' });
 		await openNote('Private/Tagebuch.md', 'preview');

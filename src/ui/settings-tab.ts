@@ -1,10 +1,12 @@
-import { Notice, PluginSettingTab, SecretComponent, Setting, type App } from 'obsidian';
+import { normalizePath, Notice, PluginSettingTab, SecretComponent, Setting, type App } from 'obsidian';
 import { cleanFolder } from '../core/paths';
 import type { DisplayMode } from '../core/types';
 import { t } from '../i18n';
 import type TransparentTranslatePlugin from '../main';
 import { addExcludedFolder, canEditExcludedFiles, isFolderExcluded } from '../obsidian/internals';
 import { DEFAULT_SETTINGS, type ConfirmDelete, type EditSessionDefault } from '../settings';
+import { GlossaryModal } from './glossary-modal';
+import { GuideModal } from './guide-modal';
 import { PROVIDER_PRESETS, presetById, type ProviderPresetId } from '../translator/providers';
 import { parseExtraBody } from '../translator/llm-translator';
 
@@ -45,12 +47,18 @@ export class TransparentTranslateSettingTab extends PluginSettingTab {
 			containerEl.createEl('p', { cls: 'setting-item-description', text: t('settings.mobile-note') });
 		}
 
+		new Setting(containerEl)
+			.setName(t('settings.guide'))
+			.setDesc(t('settings.guide.desc'))
+			.addButton((button) => button.setButtonText(t('settings.guide.button')).setCta().onClick(() => new GuideModal(this.plugin).open()));
+
 		this.displaySection();
 		if (!this.plugin.isMobile) {
 			this.providerSection();
 			this.translationSection();
 			this.editingSection();
 		}
+		this.glossarySection();
 		this.foldersSection();
 		if (!this.plugin.isMobile) this.costSection();
 		this.advancedSection();
@@ -88,6 +96,26 @@ export class TransparentTranslateSettingTab extends PluginSettingTab {
 				toggle.setValue(this.settings.animateTranslations).onChange(async (value) => {
 					this.settings.animateTranslations = value;
 					await this.save();
+				}),
+			);
+		new Setting(el)
+			.setName(t('settings.name-mode'))
+			.setDesc(t('settings.name-mode.desc'))
+			.addDropdown((d) =>
+				d
+					.addOption('original', t('mode.original'))
+					.addOption('en', t('mode.en'))
+					.addOption('de', t('mode.de'))
+					.setValue(this.settings.nameMode)
+					.onChange((value) => this.plugin.setNameMode(value as DisplayMode)),
+			);
+		new Setting(el)
+			.setName(t('settings.name-attachments'))
+			.setDesc(t('settings.name-attachments.desc'))
+			.addToggle((toggle) =>
+				toggle.setValue(this.settings.nameIncludeAttachments).onChange(async (value) => {
+					this.settings.nameIncludeAttachments = value;
+					await this.save(true);
 				}),
 			);
 		if (!this.plugin.isMobile) {
@@ -399,6 +427,44 @@ export class TransparentTranslateSettingTab extends PluginSettingTab {
 		}
 	}
 
+	private glossarySection(): void {
+		const el = this.containerEl;
+		new Setting(el).setName(t('settings.heading.glossary')).setHeading();
+		el.createEl('p', { cls: 'setting-item-description', text: t('settings.glossary-intro') });
+		new Setting(el)
+			.setName(t('settings.glossary-manage'))
+			.setDesc(t('settings.glossary-manage.desc'))
+			.addButton((button) => button.setButtonText(t('settings.glossary-manage.button')).setCta().onClick(() => new GlossaryModal(this.plugin).open()));
+		let pendingFile = this.settings.glossaryFile;
+		new Setting(el)
+			.setName(t('settings.glossary-file'))
+			.setDesc(t('settings.glossary-file.desc'))
+			.addText((text) => text.setValue(this.settings.glossaryFile).onChange((value) => (pendingFile = value)))
+			.addButton((button) =>
+				button.setButtonText(t('settings.glossary-file.apply')).onClick(async () => {
+					const next = normalizePath(pendingFile.trim());
+					if (!next || next === this.settings.glossaryFile) return;
+					await this.plugin.glossary.flush();
+					this.settings.glossaryFile = next.endsWith('.md') ? next : `${next}.md`;
+					this.plugin.glossary.reset();
+					await this.save(true);
+					await this.plugin.glossary.load();
+					this.display();
+				}),
+			);
+		if (!this.plugin.isMobile) {
+			new Setting(el)
+				.setName(t('settings.glossary-auto'))
+				.setDesc(t('settings.glossary-auto.desc'))
+				.addToggle((toggle) =>
+					toggle.setValue(this.settings.glossaryAutoUpdate).onChange(async (value) => {
+						this.settings.glossaryAutoUpdate = value;
+						await this.save(true);
+					}),
+				);
+		}
+	}
+
 	private foldersSection(): void {
 		const el = this.containerEl;
 		new Setting(el).setName(t('settings.heading.folders')).setHeading();
@@ -459,7 +525,7 @@ export class TransparentTranslateSettingTab extends PluginSettingTab {
 	}
 
 	private async moveCacheFolder(value: string): Promise<void> {
-		const next = cleanFolder(value);
+		const next = cleanFolder(value) ? normalizePath(cleanFolder(value)) : '';
 		const current = this.settings.cacheFolder;
 		if (!next || next === current) return;
 		if (this.app.vault.getAbstractFileByPath(next)) {
@@ -468,6 +534,7 @@ export class TransparentTranslateSettingTab extends PluginSettingTab {
 		}
 		try {
 			await this.plugin.store.flush();
+			await this.plugin.nameStore.flush();
 			const folder = this.app.vault.getFolderByPath(current);
 			if (folder) {
 				const parent = next.includes('/') ? next.slice(0, next.lastIndexOf('/')) : '';
@@ -475,6 +542,8 @@ export class TransparentTranslateSettingTab extends PluginSettingTab {
 				await this.app.fileManager.renameFile(folder, next);
 			}
 			this.plugin.store.reset();
+			this.plugin.nameStore.reset();
+			this.plugin.names.reset();
 			this.settings.cacheFolder = next;
 			await this.save(true);
 			new Notice(t('notice.cache-moved', { folder: next }));

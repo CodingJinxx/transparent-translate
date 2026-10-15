@@ -1,8 +1,10 @@
-import { browser, expect } from '@wdio/globals';
+import { $, browser, expect } from '@wdio/globals';
 import { before, describe, it } from 'mocha';
 import { configure, editorValue, freshVault, mockStats, openNote, readingText } from '../helpers';
 import { serializeCache, emptyCache } from '../../../src/core/cache-format';
 import { sentenceHash } from '../../../src/core/text';
+import { emptyNames, serializeNames } from '../../../src/core/names-format';
+import { nameKey } from '../../../src/core/names';
 
 const NOTE = 'Edit.md';
 
@@ -49,5 +51,54 @@ describe('Mobile (view-only)', function () {
 		await browser.keys('xyz'.split(''));
 		await browser.pause(300);
 		expect(await editorValue()).toBe(before);
+	});
+
+	it('shows synced file names from the cache without requests', async function () {
+		const names = emptyNames();
+		names.names[nameKey('Edit')] = { src: 'Edit', en: 'Editing' };
+		const before = (await mockStats()).requests;
+		await browser.executeObsidian(async ({ app, plugins }, content) => {
+			await app.vault.create('_Translations/_names.md', content);
+			plugins.transparentTranslate.setNameMode('en');
+		}, serializeNames(names));
+		await openNote(NOTE, 'preview');
+		const title = () => browser.executeObsidian(() => document.querySelector('.inline-title')?.textContent ?? '');
+		await browser.waitUntil(async () => (await title()) === 'Editing', { timeoutMsg: 'synced name was not shown' });
+		await browser.pause(800);
+		expect((await mockStats()).requests).toBe(before);
+	});
+
+	it('keeps showing a synced translation after the glossary changed, without requests', async function () {
+		const before = (await mockStats()).requests;
+		await openNote(NOTE, 'preview');
+		await browser.executeObsidian(({ app, obsidian, plugins }) => {
+			const view = app.workspace.getActiveViewOfType(obsidian.MarkdownView)!;
+			plugins.transparentTranslate.setMode(view.leaf, 'en');
+			plugins.transparentTranslate.glossary.upsert({ kind: 'map', src: 'Satz', target: 'en', to: 'sentence', scope: {} });
+		});
+		await browser.waitUntil(async () => (await readingText()).includes('This is the first sentence (synced).'));
+		await browser.pause(1000);
+		expect((await mockStats()).requests).toBe(before);
+	});
+
+	it('opens the user guide with a section dropdown', async function () {
+		await browser.executeObsidianCommand('transparent-translate:open-guide');
+		await $('.tt-guide-modal').waitForDisplayed();
+		const options = await browser.execute(() => [...document.querySelectorAll('.tt-guide-nav select option')].map((o) => o.textContent));
+		expect(options.length).toBeGreaterThanOrEqual(8);
+		expect(await $('.tt-guide-body h2').getText()).toBe('Welcome');
+		await $('.tt-guide-nav select').selectByIndex(1);
+		await browser.waitUntil(async () => (await $('.tt-guide-body h2').getText()) === 'Set up', { timeoutMsg: 'second section was not shown' });
+		// The footer is rebuilt after every section; click until the next section shows.
+		await browser.waitUntil(
+			async () => {
+				if ((await $('.tt-guide-body h2').getText()) === options[2]) return true;
+				await $('.tt-guide-footer button.mod-cta').click().catch(() => undefined);
+				await browser.pause(300);
+				return (await $('.tt-guide-body h2').getText()) === options[2];
+			},
+			{ timeoutMsg: 'Next did not advance', timeout: 20_000 },
+		);
+		await browser.keys('Escape');
 	});
 });

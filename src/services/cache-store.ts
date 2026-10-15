@@ -41,6 +41,8 @@ export class CacheStore {
 	/** Last content this store wrote per cache path, to recognize its own modify events. */
 	private readonly written = new Map<string, string>();
 	private readonly listeners = new Set<Listener>();
+	/** Increases whenever the in-memory caches are dropped, so users of the store can forget what they loaded. */
+	epoch = 0;
 
 	constructor(
 		private readonly backend: CacheBackend,
@@ -116,6 +118,7 @@ export class CacheStore {
 		const cache = this.ensure(notePath);
 		const entry: CacheEntry = { ...(cache.sentences[hash] ?? {}), ...meta };
 		entry[target] = text;
+		if (entry.gl && entry.gl.en === undefined && entry.gl.de === undefined) delete entry.gl;
 		cache.sentences[hash] = entry;
 		this.scheduleSave(notePath);
 	}
@@ -252,6 +255,7 @@ export class CacheStore {
 
 	/** Forgets everything in memory (the files are handled by the caller). */
 	reset(): void {
+		this.epoch++;
 		for (const timer of this.timers.values()) window.clearTimeout(timer);
 		this.timers.clear();
 		this.caches.clear();

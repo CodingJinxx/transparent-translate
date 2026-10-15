@@ -2,7 +2,7 @@ import { Component, Keymap, MarkdownRenderer, Platform, type App } from 'obsidia
 import { WidgetType, type EditorView } from '@codemirror/view';
 import type { TargetLanguage } from '../../core/types';
 import { t } from '../../i18n';
-import type { EditSession } from './state';
+import { refreshEffect, type EditSession } from './state';
 import { decode } from '../decode-animation';
 
 const components = new WeakMap<HTMLElement, Component>();
@@ -53,18 +53,27 @@ export class SentenceWidget extends WidgetType {
 		private readonly handlers: SentenceWidgetHandlers,
 		private readonly readOnly: boolean,
 		private readonly animate = false,
+		/** Shows text that is not translated, only to animate it. Reverts to the plain editor text afterwards. */
+		private readonly transient = false,
+		/** Tells transient widgets of different mode switches apart, so each one animates. */
+		private readonly variant = '',
 	) {
 		super();
 	}
 
 	override eq(other: SentenceWidget): boolean {
-		return other.display === this.display && other.hash === this.hash && other.readOnly === this.readOnly;
+		return other.display === this.display && other.hash === this.hash && other.readOnly === this.readOnly && other.variant === this.variant;
 	}
 
 	toDOM(view: EditorView): HTMLElement {
 		const span = createSpan({ cls: 'tt-sentence', text: this.display, attr: { lang: this.lang } });
 		if (!this.readOnly) span.setAttr('title', t('widget.edit-hint'));
 		renderInline(this.app, this.display, span, this.sourcePath, this.animate);
+		if (this.transient) {
+			window.setTimeout(() => {
+				if (view.dom.isConnected) view.dispatch({ effects: refreshEffect.of(null) });
+			}, 750);
+		}
 		span.addEventListener('mousedown', (event) => {
 			if (event.button !== 0) return;
 			const link = (event.target as HTMLElement | null)?.closest('a');

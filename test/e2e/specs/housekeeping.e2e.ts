@@ -1,4 +1,4 @@
-import { browser, expect } from '@wdio/globals';
+import { $, $$, browser, expect } from '@wdio/globals';
 import { before, describe, it } from 'mocha';
 import { command, configure, freshVault, mockStats, openNote, readingText, waitForCacheFile } from '../helpers';
 
@@ -87,5 +87,30 @@ describe('Housekeeping and settings', function () {
 			timeoutMsg: 'key from secret storage was not sent',
 		});
 		await configure({ apiKeySecret: '' });
+	});
+
+	it('opens the user guide with its sections', async function () {
+		await command('open-guide');
+		await $('.tt-guide-modal').waitForDisplayed();
+		const items = await browser.execute(() => [...document.querySelectorAll('.tt-guide-nav-item')].map((el) => el.textContent));
+		expect(items.length).toBeGreaterThanOrEqual(8);
+		expect(items[0]).toBe('Welcome');
+		expect(await $('.tt-guide-body h2').getText()).toBe('Welcome');
+
+		await $$('.tt-guide-nav-item')[1]!.click();
+		await browser.waitUntil(async () => (await $('.tt-guide-body h2').getText()) === 'Set up', { timeoutMsg: 'second section was not shown' });
+		expect(await $('.tt-guide-body').getText()).toContain('Guten Morgen');
+		// The footer is rebuilt after every section; click until the next section shows.
+		await browser.waitUntil(
+			async () => {
+				if ((await $('.tt-guide-body h2').getText()) === items[2]) return true;
+				await $('.tt-guide-footer button.mod-cta').click().catch(() => undefined);
+				await browser.pause(300);
+				return (await $('.tt-guide-body h2').getText()) === items[2];
+			},
+			{ timeoutMsg: 'Next did not advance', timeout: 20_000 },
+		);
+		await browser.keys('Escape');
+		await browser.waitUntil(async () => !(await $('.tt-guide-modal').isExisting()), { timeoutMsg: 'guide did not close' });
 	});
 });

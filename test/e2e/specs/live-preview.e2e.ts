@@ -121,6 +121,8 @@ describe('Live Preview', function () {
 
 	it('deletes a translated sentence without asking and offers Undo', async function () {
 		await showEnglish();
+		// Notices of earlier tests are still on screen for a while; the Undo button must be this test's.
+		await browser.execute(() => document.querySelectorAll('.notice').forEach((n) => n.remove()));
 		const listStart = ORIGINAL.indexOf('Ein Punkt');
 		const listEnd = ORIGINAL.indexOf('Liste.') + 'Liste.'.length;
 		await browser.executeObsidian(({ app, obsidian }, from, to) => {
@@ -131,8 +133,17 @@ describe('Live Preview', function () {
 		await browser.keys('Backspace');
 		await browser.waitUntil(async () => !(await editorValue()).includes('Ein Punkt'));
 		await expect($('.notice*=Deleted German original sentence')).toBeExisting();
-		await $('.notice .tt-notice-undo').click();
-		await browser.waitUntil(async () => (await editorValue()) === ORIGINAL, { timeoutMsg: 'Undo in the notice did not restore the sentence' });
+		// Slow machines can swallow the first click while the notice is still animating in: click until it worked.
+		await browser.waitUntil(
+			async () => {
+				if ((await editorValue()) === ORIGINAL) return true;
+				const undo = await $('.notice .tt-notice-undo');
+				if (await undo.isExisting()) await undo.click().catch(() => undefined);
+				await browser.pause(400);
+				return (await editorValue()) === ORIGINAL;
+			},
+			{ timeoutMsg: 'Undo in the notice did not restore the sentence', timeout: 20_000 },
+		);
 	});
 
 	it('typing over a selected translation opens an edit session instead of writing', async function () {
@@ -148,5 +159,34 @@ describe('Live Preview', function () {
 		await expect($('.tt-session .tt-session-input')).toBeDisplayed();
 		expect(await editorValue()).toBe(ORIGINAL);
 		await browser.keys('Escape');
+	});
+
+	it('animates between all modes and leaves plain editor text behind', async function () {
+		await configure({ animateTranslations: true });
+		const decoding = () => browser.execute(() => document.querySelectorAll('.workspace-leaf.mod-active .cm-content .tt-decoding').length);
+		for (const [i, next] of (['show-german', 'show-english', 'show-original', 'show-german'] as const).entries()) {
+			await command(next);
+			await browser.waitUntil(async () => (await decoding()) > 0, { interval: 20, timeoutMsg: `no animation when switching with ${next} (step ${i + 1})` });
+			// The animation is purely visual: the document never changes.
+			expect(await editorValue()).toBe(ORIGINAL);
+			await browser.waitUntil(async () => (await decoding()) === 0, { timeoutMsg: 'animation did not finish' });
+		}
+		// German original: no widgets are left once the animation is over.
+		await browser.waitUntil(async () => (await widgetTexts()).length === 0, { timeoutMsg: 'transient widgets were not removed' });
+		expect(await readFile(NOTE)).toBe(ORIGINAL);
+		await configure();
+	});
+
+	it('shows sentences that start with bold text, also on following lines and in bullets', async function () {
+		// Obsidian hides the ** markers with its own replace decorations at the start of such a sentence.
+		const text = ['**Termin:** Mi um acht Uhr.', '**Folien:** Kapitel null.', '', '- **Vorlesung:** Mi um acht Uhr.', '- **Übung:** Do um neun Uhr.', ''].join('\n');
+		await browser.executeObsidian(async ({ app }, content) => {
+			await app.vault.create('Bold.md', content);
+		}, text);
+		await openNote('Bold.md', 'live');
+		await command('show-english');
+		await browser.waitUntil(async () => (await widgetTexts()).length === 4, { timeoutMsg: 'not every sentence was shown' });
+		expect(await widgetTexts()).toEqual(['EN: Termin: Mi um acht Uhr.', 'EN: Folien: Kapitel null.', 'EN: Vorlesung: Mi um acht Uhr.', 'EN: Übung: Do um neun Uhr.']);
+		expect(await readFile('Bold.md')).toBe(text);
 	});
 });

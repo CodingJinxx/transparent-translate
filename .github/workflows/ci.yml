@@ -14,9 +14,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # The job names below are the required status checks of the `main` branch protection:
+  # "Check (Node 22.x)", "Check (Node 24.x)" and "End-to-end (Obsidian)". Rename them only together with that rule.
   check:
     name: Check (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -52,6 +55,7 @@ jobs:
     name: End-to-end (Obsidian)
     runs-on: ubuntu-latest
     needs: check
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7

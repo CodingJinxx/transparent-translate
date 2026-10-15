@@ -1,4 +1,4 @@
-import type { App } from 'obsidian';
+import type { App, WorkspaceLeaf } from 'obsidian';
 
 /**
  * The only place that touches non-public Obsidian API.
@@ -42,4 +42,20 @@ export function addExcludedFolder(app: App, folder: string): void {
 	const entries = getExcludedFiles(app);
 	const value = `${folder.replace(/\/+$/, '')}/`;
 	if (!entries.includes(value)) vault.setConfig('userIgnoreFilters', [...entries, value]);
+}
+
+/**
+ * The tab header of a leaf is not exposed by the public API. Used only to show
+ * translated file names on tabs; if the properties are missing, tabs just keep
+ * their original titles.
+ */
+interface TabHeaderAccess {
+	tabHeaderEl?: unknown;
+	tabHeaderInnerTitleEl?: unknown;
+}
+
+export function getTabHeaderEls(leaf: WorkspaceLeaf): { header: HTMLElement | null; title: HTMLElement | null } {
+	const access = leaf as unknown as TabHeaderAccess;
+	const pick = (value: unknown) => (value instanceof HTMLElement ? value : null);
+	return { header: pick(access.tabHeaderEl), title: pick(access.tabHeaderInnerTitleEl) };
 }

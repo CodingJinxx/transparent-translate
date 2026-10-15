@@ -2,8 +2,8 @@ import type { Sentence } from './types';
 
 /** How one sentence should be displayed. */
 export type SentenceDisplay =
-	/** Show this text instead of the original. */
-	| { kind: 'translated'; text: string }
+	/** Show this text instead of the original. `outdated`: the glossary changed since, a new translation is requested. */
+	| { kind: 'translated'; text: string; outdated?: boolean }
 	/** The translation equals the original (sentence already in the target language). */
 	| { kind: 'same' }
 	/** Translation requested but not available yet. */
@@ -16,6 +16,8 @@ export type SentenceDisplay =
 export interface ComposeResult {
 	text: string;
 	translated: number;
+	/** Sentences already in the target language (shown unchanged). */
+	same: number;
 	pending: number;
 	failed: number;
 	missing: number;
@@ -29,11 +31,13 @@ export interface ComposeOptions {
 	 */
 	markerClassPrefix?: string;
 	/**
-	 * Wrap translated sentences in `<span class="tt-s" data-tt="<hash>">` so the
+	 * Wrap translated and unchanged sentences in `<span class="tt-s" data-tt="<hash>">` so the
 	 * reading view can animate them. Sentences containing `^` (block ids,
 	 * footnotes) are not wrapped, because the span would break that syntax.
 	 */
 	wrapTranslated?: boolean;
+	/** Also wrap sentences that are shown unchanged (they animate too). */
+	wrapSame?: boolean;
 }
 
 /**
@@ -49,7 +53,7 @@ export function composeRange(
 	display: (sentence: Sentence) => SentenceDisplay,
 	opts: ComposeOptions = {},
 ): ComposeResult {
-	const result: ComposeResult = { text: '', translated: 0, pending: 0, failed: 0, missing: 0 };
+	const result: ComposeResult = { text: '', translated: 0, same: 0, pending: 0, failed: 0, missing: 0 };
 	let pos = from;
 	const ordered = sentences.filter((s) => s.from >= from && s.to <= to).sort((a, b) => a.from - b.from);
 	for (const sentence of ordered) {
@@ -58,11 +62,12 @@ export function composeRange(
 		const d = display(sentence);
 		switch (d.kind) {
 			case 'translated':
-				result.text += opts.wrapTranslated && !d.text.includes('^') ? `<span class="tt-s" data-tt="${sentence.hash}">${d.text}</span>` : d.text;
+				result.text += opts.wrapTranslated && !d.text.includes('^') ? `<span class="tt-s tt-t" data-tt="${sentence.hash}">${d.text}</span>` : d.text;
 				result.translated++;
 				break;
 			case 'same':
-				result.text += sentence.text;
+				result.same++;
+				result.text += opts.wrapSame && !sentence.text.includes('^') ? `<span class="tt-s" data-tt="${sentence.hash}">${sentence.text}</span>` : sentence.text;
 				break;
 			default:
 				result[d.kind]++;

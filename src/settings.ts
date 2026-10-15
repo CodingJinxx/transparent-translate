@@ -38,12 +38,21 @@ export interface TransparentTranslateSettings {
 	livePreview: boolean;
 	animateTranslations: boolean;
 	statusBar: boolean;
+	/** Language of file and folder names in the explorer, tabs and titles. `original` = off. */
+	nameMode: DisplayMode;
+	nameIncludeAttachments: boolean;
 
 	// Editing in translated views
 	editSessionDefault: EditSessionDefault;
 	applyOnLeave: boolean;
 	confirmDelete: ConfirmDelete;
 	noteEditPreferences: Record<string, NoteEditPreference>;
+
+	// Glossary
+	/** Note that holds the learned terminology (outside the cache folder, so clearing the cache keeps it). */
+	glossaryFile: string;
+	/** Translate sentences again when the glossary entries that apply to them changed. */
+	glossaryAutoUpdate: boolean;
 
 	// Folders
 	cacheFolder: string;
@@ -85,11 +94,16 @@ export const DEFAULT_SETTINGS: TransparentTranslateSettings = {
 	livePreview: true,
 	animateTranslations: true,
 	statusBar: true,
+	nameMode: 'original',
+	nameIncludeAttachments: false,
 
 	editSessionDefault: 'ask',
 	applyOnLeave: true,
 	confirmDelete: 'off',
 	noteEditPreferences: {},
+
+	glossaryFile: 'Translation glossary.md',
+	glossaryAutoUpdate: true,
 
 	cacheFolder: '_Translations',
 	excludedFolders: '',
