@@ -17,7 +17,7 @@ import { LlmTranslator, parseExtraBody, parseHeaderLines, type HttpClient, type 
 import { registerCommands } from './commands';
 import { ConfirmModal } from './ui/confirm-modal';
 import { TransparentTranslateSettingTab } from './ui/settings-tab';
-import { createReadingViewProcessor } from './views/reading-view';
+import { ReadingViewController } from './views/reading-view';
 import { createLivePreviewExtension, refreshEffect, setModeEffect } from './views/live-preview/extension';
 
 /** Obsidian's `requestUrl` avoids CORS and works on every platform. */
@@ -35,6 +35,7 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 	readonly isMobile = Platform.isMobile;
 
 	private modes!: ModeManager;
+	private reading!: ReadingViewController;
 	private readonly parsers = new Map<string, NoteParser>();
 	private readonly editorViews = new Set<EditorView>();
 	private readonly headerActions = new WeakMap<MarkdownView, HTMLElement>();
@@ -63,7 +64,8 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 		this.service.onUpdate((path) => this.scheduleRefresh(path));
 		this.modes = new ModeManager(() => this.settings.defaultMode);
 
-		this.registerMarkdownPostProcessor(createReadingViewProcessor(this));
+		this.reading = new ReadingViewController(this);
+		this.registerMarkdownPostProcessor(this.reading.processor);
 		this.registerEditorExtension(createLivePreviewExtension(this));
 		this.addSettingTab(new TransparentTranslateSettingTab(this.app, this));
 		registerCommands(this);
@@ -109,9 +111,7 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 	refreshAllViews(): void {
 		this.parsers.clear();
 		for (const view of this.editorViews) view.dispatch({ effects: refreshEffect.of(null) });
-		for (const leaf of this.app.workspace.getLeavesOfType('markdown')) {
-			if (leaf.view instanceof MarkdownView && leaf.view.getMode() === 'preview') leaf.view.previewMode.rerender(true);
-		}
+		this.reading.refreshAll();
 	}
 
 	override async onExternalSettingsChange(): Promise<void> {
@@ -185,7 +185,7 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 		this.updateHeaderAction(view);
 		this.updateStatusBar();
 		this.syncEditorModes(leaf);
-		if (view.getMode() === 'preview') view.previewMode.rerender(true);
+		this.reading.refresh(path);
 	}
 
 	cycleMode(leaf: WorkspaceLeaf): void {
@@ -300,11 +300,7 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 			const info = view.state.field(editorInfoField, false);
 			if (info?.file?.path === path) view.dispatch({ effects: refreshEffect.of(null) });
 		}
-		for (const leaf of this.app.workspace.getLeavesOfType('markdown')) {
-			const view = leaf.view;
-			if (!(view instanceof MarkdownView) || view.file?.path !== path) continue;
-			if (view.getMode() === 'preview' && isTargetLanguage(this.modes.get(leaf, path))) view.previewMode.rerender(true);
-		}
+		this.reading.refresh(path);
 		this.updateStatusBar();
 	}
 
@@ -414,6 +410,7 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 				if (cacheNote(oldPath) || cacheNote(file.path)) return;
 				this.parsers.delete(oldPath);
 				this.service.forgetNote(oldPath);
+				this.reading.rename(oldPath, file.path);
 				void this.store.renameNote(oldPath, file.path);
 				const preference = this.settings.noteEditPreferences[oldPath];
 				if (preference) {

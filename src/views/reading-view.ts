@@ -1,50 +1,189 @@
-import { MarkdownRenderChild, MarkdownRenderer, type MarkdownPostProcessor } from 'obsidian';
+import {
+	MarkdownRenderChild,
+	MarkdownRenderer,
+	type MarkdownPostProcessor,
+	type MarkdownPostProcessorContext,
+	type WorkspaceLeaf,
+} from 'obsidian';
 import { composeRange } from '../core/compose';
 import { sentencesInLines } from '../core/note';
 import { lineEnd } from '../core/text';
-import { isTargetLanguage } from '../core/types';
+import { isTargetLanguage, type TargetLanguage } from '../core/types';
 import type { TranslateHost } from '../host';
 import { log } from '../log';
 
 export const MARKER_PREFIX = 'tt';
 
-/** Sections this plugin rendered. Nested renders inside them are skipped. */
-const ownSections = new WeakSet<HTMLElement>();
-
-function insideOwnSection(el: HTMLElement): boolean {
-	for (let node: HTMLElement | null = el; node; node = node.parentElement) {
-		if (ownSections.has(node)) return true;
-	}
-	return false;
+/** A rendered section of a note in Reading view that contains translatable sentences. */
+interface Section {
+	el: HTMLElement;
+	ctx: MarkdownPostProcessorContext;
+	path: string;
+	leaf: WorkspaceLeaf;
+	/** Obsidian's own rendering of the section, kept to restore it in Original mode. */
+	original: ChildNode[] | null;
+	/** Markdown currently rendered into `el` (to skip identical re-renders). */
+	shown: string | null;
+	/** Nodes this controller inserted into `el`. */
+	inserted: ChildNode[];
+	token: number;
 }
 
 /**
- * Reading view: replaces each rendered section with the rendering of its
- * translated Markdown. Sentences without a translation yet are shown in the
- * original language, dimmed, and re-rendered once the translation arrives.
+ * Reading view. Obsidian renders sections once and reuses them, so instead of
+ * relying on a full re-render this controller remembers the sections it has
+ * seen and swaps their content whenever the mode or the translations change.
  */
-export function createReadingViewProcessor(host: TranslateHost): MarkdownPostProcessor {
-	return async (el, ctx) => {
-		if (insideOwnSection(el)) return;
+export class ReadingViewController {
+	private readonly sections = new Map<string, Set<Section>>();
+	private readonly byElement = new WeakMap<HTMLElement, Section>();
+	/** Scratch containers this controller renders into; nested renders inside them are ignored. */
+	private readonly own = new WeakSet<HTMLElement>();
+
+	constructor(private readonly host: TranslateHost) {}
+
+	readonly processor: MarkdownPostProcessor = (el, ctx) => {
+		if (this.isOwn(el)) return;
+		const path = ctx.sourcePath;
+		if (!this.host.isTranslatable(path)) return;
 		const info = ctx.getSectionInfo(el);
 		if (!info) return;
-		const path = ctx.sourcePath;
-		const view = host.findMarkdownView(path, el);
-		if (!view) return;
-		const mode = host.modeOf(view.leaf, path);
-		if (!isTargetLanguage(mode) || !host.isTranslatable(path)) return;
-		// Only translate the note itself, never other renders of other text (embeds, exports).
-		if (info.text !== view.data) return;
+		const view = this.host.findMarkdownView(path, el);
+		// Only the note itself is translated, never other renders (embeds, hover previews, exports).
+		if (!view || info.text !== view.data) return;
+		const note = this.host.parse(path, info.text);
+		if (sentencesInLines(note, info.lineStart, info.lineEnd).length === 0) return;
 
-		const note = host.parse(path, info.text);
-		const sentences = sentencesInLines(note, info.lineStart, info.lineEnd);
-		if (sentences.length === 0) return;
+		let section = this.byElement.get(el);
+		if (section) {
+			section.leaf = view.leaf;
+			section.ctx = ctx;
+			// Obsidian may run post-processors again on an element it did not re-render.
+			// Only fresh content (not ours) replaces the saved original.
+			const ours = section.inserted.length > 0 && section.inserted.every((n) => n.parentNode === el);
+			if (!ours) {
+				section.original = null;
+				section.shown = null;
+				section.inserted = [];
+			}
+		} else {
+			section = { el, ctx, path, leaf: view.leaf, original: null, shown: null, inserted: [], token: 0 };
+			this.byElement.set(el, section);
+			let set = this.sections.get(path);
+			if (!set) {
+				set = new Set();
+				this.sections.set(path, set);
+			}
+			set.add(section);
+			const entry = section;
+			const child = new MarkdownRenderChild(el);
+			child.register(() => this.forget(entry));
+			ctx.addChild(child);
+		}
+		return this.apply(section);
+	};
 
+	/** True if `el` sits inside a container this controller rendered (a nested render). */
+	private isOwn(el: HTMLElement): boolean {
+		for (let node: HTMLElement | null = el.parentElement; node; node = node.parentElement) {
+			if (this.own.has(node)) return true;
+		}
+		return false;
+	}
+
+	private forget(section: Section): void {
+		const set = this.sections.get(section.path);
+		set?.delete(section);
+		if (set && set.size === 0) this.sections.delete(section.path);
+		this.byElement.delete(section.el);
+	}
+
+	/** Re-applies the current mode to every known section of a note. */
+	refresh(path: string): void {
+		for (const section of this.sections.get(path) ?? []) void this.apply(section);
+	}
+
+	refreshAll(): void {
+		for (const path of this.sections.keys()) this.refresh(path);
+	}
+
+	/** Moves known sections of a renamed note to its new path. */
+	rename(oldPath: string, newPath: string): void {
+		const set = this.sections.get(oldPath);
+		if (!set) return;
+		this.sections.delete(oldPath);
+		for (const section of set) section.path = newPath;
+		this.sections.set(newPath, set);
+	}
+
+	private async apply(section: Section): Promise<void> {
+		const token = ++section.token;
+		const mode = this.host.modeOf(section.leaf, section.path);
+		if (!isTargetLanguage(mode) || !this.host.isTranslatable(section.path)) {
+			this.restore(section);
+			return;
+		}
+		const info = section.ctx.getSectionInfo(section.el);
+		if (!info) return;
+		const markdown = this.compose(section.path, info.text, info.lineStart, info.lineEnd, mode);
+		if (markdown === null) {
+			this.restore(section);
+			return;
+		}
+		if (markdown.text === section.shown) return;
+
+		const rendered = createDiv();
+		this.own.add(rendered);
+		const child = new MarkdownRenderChild(rendered);
+		section.ctx.addChild(child);
+		try {
+			await MarkdownRenderer.render(this.host.app, markdown.text, rendered, section.path, child);
+		} catch (error) {
+			log.error('Could not render translation', error);
+			return;
+		}
+		// A newer apply() started while rendering: drop this result.
+		if (token !== section.token) return;
+
+		const el = section.el;
+		if (section.original === null) section.original = Array.from(el.childNodes);
+		el.empty();
+		section.inserted = Array.from(rendered.childNodes);
+		for (const node of section.inserted) el.appendChild(node);
+		el.addClass('tt-translated');
+		el.toggleClass('tt-has-pending', markdown.pending);
+		el.setAttr('lang', mode);
+		section.shown = markdown.text;
+	}
+
+	private restore(section: Section): void {
+		section.token++;
+		const { el, original } = section;
+		if (original !== null) {
+			el.empty();
+			for (const node of original) el.appendChild(node);
+			section.original = null;
+		}
+		section.inserted = [];
+		el.removeClass('tt-translated', 'tt-has-pending');
+		el.removeAttribute('lang');
+		section.shown = null;
+	}
+
+	/**
+	 * Translated Markdown for lines `lineStart..lineEnd`, or null if nothing in
+	 * them differs from the original. Requests missing translations (lazily,
+	 * for the whole note at once).
+	 */
+	private compose(path: string, text: string, lineStart: number, lineEndLine: number, mode: TargetLanguage): { text: string; pending: boolean } | null {
+		const host = this.host;
+		const note = host.parse(path, text);
+		const sentences = sentencesInLines(note, lineStart, lineEndLine);
 		let missing = false;
 		const composed = composeRange(
 			note.text,
-			note.lineStarts[info.lineStart] ?? 0,
-			lineEnd(note.text, note.lineStarts, info.lineEnd),
+			note.lineStarts[lineStart] ?? 0,
+			lineEnd(note.text, note.lineStarts, lineEndLine),
 			sentences,
 			(s) => {
 				const display = host.service.display(path, s, mode);
@@ -56,25 +195,8 @@ export function createReadingViewProcessor(host: TranslateHost): MarkdownPostPro
 			},
 			{ markerClassPrefix: MARKER_PREFIX },
 		);
-		// Lazy translation: the first section that needs it requests the whole note.
 		if (missing) host.service.request(path, note, note.sentences, mode, host.noteTitle(path));
-		if (composed.translated === 0 && composed.pending === 0 && composed.failed === 0 && composed.missing === 0) return;
-
-		const child = new MarkdownRenderChild(el);
-		ctx.addChild(child);
-		ownSections.add(el);
-		const rendered = createDiv();
-		ownSections.add(rendered);
-		try {
-			await MarkdownRenderer.render(host.app, composed.text, rendered, path, child);
-		} catch (error) {
-			log.error('Could not render translation', error);
-			return;
-		}
-		el.empty();
-		el.addClass('tt-translated');
-		el.toggleClass('tt-has-pending', composed.pending > 0);
-		el.setAttr('lang', mode);
-		while (rendered.firstChild) el.appendChild(rendered.firstChild);
-	};
+		if (composed.translated + composed.pending + composed.failed + composed.missing === 0) return null;
+		return { text: composed.text, pending: composed.pending > 0 };
+	}
 }
