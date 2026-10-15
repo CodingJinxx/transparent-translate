@@ -6,6 +6,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
+- Settings are now found by Obsidian's settings search (Obsidian 1.13 and later). The tab is described once and rendered from that description on 1.13+ and through the classic settings API on older versions, down to the minimum 1.11.4.
 - Showcase: a demo GIF at the top of the README and a website on GitHub Pages with the demo, the features, install steps and optional background music made with Strudel. `npm run demo` records the demo in a sandboxed Obsidian with the mock translator (see `docs/showcase.md`).
 
 ## [0.4.3] - 2026-10-15
