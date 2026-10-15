@@ -89,6 +89,12 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 	}
 
 	override onunload(): void {
+		// Header actions belong to the views, not to the plugin: remove them explicitly.
+		for (const leaf of this.app.workspace.getLeavesOfType('markdown')) {
+			if (!(leaf.view instanceof MarkdownView)) continue;
+			this.headerActions.get(leaf.view)?.remove();
+			this.headerActions.delete(leaf.view);
+		}
 		this.service.cancelAll();
 		void this.store.flush();
 		for (const timer of this.refreshTimers.values()) window.clearTimeout(timer);

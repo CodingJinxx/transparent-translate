@@ -1,4 +1,4 @@
-import { Notice, PluginSettingTab, SecretComponent, Setting, type App } from 'obsidian';
+import { normalizePath, Notice, PluginSettingTab, SecretComponent, Setting, type App } from 'obsidian';
 import { cleanFolder } from '../core/paths';
 import type { DisplayMode } from '../core/types';
 import { t } from '../i18n';
@@ -459,7 +459,7 @@ export class TransparentTranslateSettingTab extends PluginSettingTab {
 	}
 
 	private async moveCacheFolder(value: string): Promise<void> {
-		const next = cleanFolder(value);
+		const next = cleanFolder(value) ? normalizePath(cleanFolder(value)) : '';
 		const current = this.settings.cacheFolder;
 		if (!next || next === current) return;
 		if (this.app.vault.getAbstractFileByPath(next)) {

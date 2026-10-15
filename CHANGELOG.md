@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-15
+
+### Fixed
+
+- The language button in note headers is removed when the plugin is disabled.
+- A renamed cache folder path is normalized like other vault paths.
+
 ## [0.1.0] - 2026-10-15
 
 First release.
@@ -24,5 +31,6 @@ First release.
 - View-only mode on mobile (no requests, no key).
 - English and German interface.
 
-[Unreleased]: https://github.com/CodingJinxx/transparent-translate/compare/0.1.0...HEAD
+[Unreleased]: https://github.com/CodingJinxx/transparent-translate/compare/0.1.1...HEAD
+[0.1.1]: https://github.com/CodingJinxx/transparent-translate/compare/0.1.0...0.1.1
 [0.1.0]: https://github.com/CodingJinxx/transparent-translate/releases/tag/0.1.0

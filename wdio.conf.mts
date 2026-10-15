@@ -21,6 +21,7 @@ if (env.CI) console.log('obsidian-cache-key:', JSON.stringify([desktopVersions, 
 const vault = 'test/vaults/e2e';
 const screenshots = 'test/e2e/specs/screenshots.e2e.ts';
 const mobileSpec = 'test/e2e/specs/mobile.e2e.ts';
+
 let mockServer: Server | null = null;
 
 export const config: WebdriverIO.Config = {
