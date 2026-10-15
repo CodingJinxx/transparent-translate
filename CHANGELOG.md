@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+
+- Styles: no `!important` and no `text-decoration` (failed and missing sentences use a dotted bottom border), as flagged by the Obsidian review.
+
 ## [0.4.2] - 2026-10-15
 
 ### Changed
