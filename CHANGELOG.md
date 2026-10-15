@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-10-15
+
 ### Changed
 
 - New plugin icon: the language button in note headers and the status bar item use it (one colour, follows the theme). The full-colour icon is in `docs/images/icon.svg` and shown in the README.
@@ -93,7 +95,8 @@ First release.
 - View-only mode on mobile (no requests, no key).
 - English and German interface.
 
-[Unreleased]: https://github.com/CodingJinxx/transparent-translate/compare/0.4.1...HEAD
+[Unreleased]: https://github.com/CodingJinxx/transparent-translate/compare/0.4.2...HEAD
+[0.4.2]: https://github.com/CodingJinxx/transparent-translate/compare/0.4.1...0.4.2
 [0.4.1]: https://github.com/CodingJinxx/transparent-translate/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/CodingJinxx/transparent-translate/compare/0.3.0...0.4.0
 [0.3.0]: https://github.com/CodingJinxx/transparent-translate/compare/0.2.2...0.3.0
