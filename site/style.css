@@ -258,3 +258,7 @@ footer {
 	color: var(--muted);
 	font-size: 0.9rem;
 }
+
+.support {
+	text-align: center;
+}
