@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-10-15
+
 ### Added
 
 - Settings are now found by Obsidian's settings search (Obsidian 1.13 and later). The tab is described once and rendered from that description on 1.13+ and through the classic settings API on older versions, down to the minimum 1.11.4.
@@ -106,7 +108,8 @@ First release.
 - View-only mode on mobile (no requests, no key).
 - English and German interface.
 
-[Unreleased]: https://github.com/CodingJinxx/transparent-translate/compare/0.4.3...HEAD
+[Unreleased]: https://github.com/CodingJinxx/transparent-translate/compare/0.4.4...HEAD
+[0.4.4]: https://github.com/CodingJinxx/transparent-translate/compare/0.4.3...0.4.4
 [0.4.3]: https://github.com/CodingJinxx/transparent-translate/compare/0.4.2...0.4.3
 [0.4.2]: https://github.com/CodingJinxx/transparent-translate/compare/0.4.1...0.4.2
 [0.4.1]: https://github.com/CodingJinxx/transparent-translate/compare/0.4.0...0.4.1
