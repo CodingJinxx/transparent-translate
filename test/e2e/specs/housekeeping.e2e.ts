@@ -70,6 +70,49 @@ describe('Housekeeping and settings', function () {
 		expect(excluded).toContain('_Translations/');
 	});
 
+	it('describes the settings for Obsidian settings search and renders them from that description', async function () {
+		type Item = { name: string; desc?: string };
+		type Group = { type: string; heading?: string; items: Item[] };
+		type Tab = { id: string; containerEl: HTMLElement; update?: () => void; getSettingDefinitions(): Group[] };
+		const info = await browser.executeObsidian(({ app }) => {
+			const tab = (app as unknown as { setting: { pluginTabs: Tab[] } }).setting.pluginTabs.find((t) => t.id === 'transparent-translate')!;
+			const groups = tab.getSettingDefinitions();
+			return { names: groups.flatMap((g) => g.items.map((i) => i.name)), headings: groups.map((g) => g.heading ?? ''), declarative: typeof tab.update === 'function' };
+		});
+		expect(info.names).toEqual(expect.arrayContaining(['API key', 'Model', 'Test connection', 'Cache folder', 'Default display language']));
+		expect(info.headings).toEqual(expect.arrayContaining(['Translation provider', 'Glossary']));
+		if (!info.declarative) return; // Obsidian before 1.13 renders the same rows through display().
+
+		// 1.13+: open the tab so Obsidian renders it from the definitions, and use a row that builds on its description.
+		await browser.executeObsidian(({ app }) => {
+			const setting = (app as unknown as { setting: { open(): void; openTabById(id: string): void } }).setting;
+			setting.open();
+			setting.openTabById('transparent-translate');
+		});
+		const rendered = () =>
+			browser.executeObsidian(({ app }) => {
+				const tab = (app as unknown as { setting: { activeTab: { id: string; containerEl: HTMLElement } } }).setting.activeTab;
+				if (tab.id !== 'transparent-translate') return [];
+				return [...tab.containerEl.querySelectorAll('.setting-item-name')].map((n) => n.textContent ?? '');
+			});
+		await browser.waitUntil(async () => (await rendered()).includes('API key'), { timeoutMsg: 'the declarative settings tab did not render' });
+		const before = (await mockStats()).requests;
+		await browser.executeObsidian(({ app }) => {
+			const tab = (app as unknown as { setting: { activeTab: { containerEl: HTMLElement } } }).setting.activeTab;
+			[...tab.containerEl.querySelectorAll('button')].find((b) => b.textContent === 'Test')?.click();
+		});
+		await browser.waitUntil(
+			async () =>
+				browser.executeObsidian(({ app }) => {
+					const tab = (app as unknown as { setting: { activeTab: { containerEl: HTMLElement } } }).setting.activeTab;
+					return (tab.containerEl.querySelector('.tt-test-result')?.textContent ?? '').includes('Good morning');
+				}),
+			{ timeoutMsg: 'test connection result was not shown in the declarative tab' },
+		);
+		expect((await mockStats()).requests).toBe(before + 1);
+		await browser.executeObsidian(({ app }) => (app as unknown as { setting: { close(): void } }).setting.close());
+	});
+
 	it('never stores the API key in data.json', async function () {
 		const data = await browser.executeObsidian(async ({ app }) => {
 			app.secretStorage.setSecret('tt-test-key', 'sk-test-not-real-1234567890');
