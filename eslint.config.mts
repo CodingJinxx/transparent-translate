@@ -1,0 +1,39 @@
+import obsidianmd from 'eslint-plugin-obsidianmd';
+import globals from 'globals';
+import { globalIgnores, defineConfig } from 'eslint/config';
+
+export default defineConfig(
+	globalIgnores([
+		'node_modules',
+		'dist',
+		'coverage',
+		'eslint.config.mts',
+		'esbuild.config.mjs',
+		'version-bump.mjs',
+		'scripts',
+		'versions.json',
+		'main.js',
+		'package.json',
+		'package-lock.json',
+		'tsconfig.json',
+		'vitest.config.ts',
+		'vitest.live.config.ts',
+		'wdio.conf.mts',
+		'test',
+	]),
+	{
+		languageOptions: {
+			globals: {
+				...globals.browser,
+			},
+			parserOptions: {
+				projectService: {
+					allowDefaultProject: ['eslint.config.mts', 'manifest.json'],
+				},
+				tsconfigRootDir: import.meta.dirname,
+				extraFileExtensions: ['.json'],
+			},
+		},
+	},
+	...obsidianmd.configs.recommended,
+);

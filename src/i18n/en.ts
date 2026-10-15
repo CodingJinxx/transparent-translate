@@ -1,0 +1,218 @@
+/**
+ * English UI strings. `{name}` marks a variable. German strings live in
+ * `de.ts` and must have the same keys (enforced by the type).
+ */
+export const en = {
+	// Modes
+	'mode.original': 'Original',
+	'mode.en': 'English',
+	'mode.de': 'German',
+	'mode.short.original': 'OG',
+	'mode.short.en': 'EN',
+	'mode.short.de': 'DE',
+	'language.en': 'English',
+	'language.de': 'German',
+
+	// Commands
+	'command.show-original': 'Show original',
+	'command.show-english': 'Show English',
+	'command.show-german': 'Show German',
+	'command.cycle': 'Cycle display language',
+	'command.retranslate': 'Re-translate this note',
+	'command.clear-note-cache': 'Clear translation cache for this note',
+	'command.clear-all-cache': 'Clear the entire translation cache',
+	'command.translate-folder': 'Translate folder…',
+	'command.copy-original': 'Copy original text',
+	'command.restore-original': 'Restore replaced original…',
+	'command.prune-cache': 'Prune unused translations',
+
+	// Header action and status bar
+	'action.tooltip': 'Display language: {mode} (select to switch)',
+	'status.tooltip.original': 'Showing the original text. Select to switch the display language.',
+	'status.tooltip.translated': 'Showing the {language} translation. Translation never changes the file on disk. Select to switch.',
+
+	// Notices
+	'notice.no-provider': 'Transparent Translate: set up a translation provider in the plugin settings first.',
+	'notice.translation-error': 'Translation failed: {error}',
+	'notice.excluded': 'This note is excluded from translation (see the folder lists in the plugin settings).',
+	'notice.mobile-view-only': 'Translations are view-only on mobile. Switch to Original to edit.',
+	'notice.mobile-no-translate': 'Translations are only generated on desktop. This command is not available on mobile.',
+	'notice.cache-cleared-note': 'Translation cache cleared for this note.',
+	'notice.cache-cleared-all': 'Translation cache cleared.',
+	'notice.retranslating': 'Re-translating this note…',
+	'notice.copied-original': 'Original text copied.',
+	'notice.session-conflict': 'The original text changed while you were editing (sync or another plugin). Nothing was written.',
+	'notice.deleted-sentence': 'Deleted {language} original sentence.',
+	'notice.deleted-sentences': 'Deleted {count} {language} original sentences.',
+	'notice.undo': 'Undo',
+	'notice.restored': 'Original sentence restored.',
+	'notice.restore-copied': 'The replacing sentence is no longer in this note. The original text was copied to the clipboard.',
+	'notice.no-replaced': 'No replaced originals recorded for this note.',
+	'notice.pruned': 'Removed {count} unused translations.',
+	'notice.cache-moved': 'Translation cache moved to "{folder}".',
+	'notice.cache-move-failed': 'Could not move the translation cache: {error}',
+	'notice.cache-folder-exists': 'A folder named "{folder}" already exists. Choose another name.',
+	'notice.exclusion-added': '"{folder}" was added to Excluded files.',
+	'notice.no-markdown-view': 'Open a note first.',
+
+	// Edit session banner
+	'session.banner': 'This sentence is a translation of your {source} original. Your edit will…',
+	'session.banner-multi': 'This text is a translation of your {source} original. Your edit will…',
+	'session.replaces': 'Replaces on disk: “{text}”',
+	'session.replace': 'Replace original with {target}',
+	'session.edit-original': 'Edit {sourceName} original instead',
+	'session.cancel': 'Cancel',
+	'session.dont-ask': "Don't ask again for this note",
+	'session.input-label': 'Edit translated sentence',
+	'session.hint-enter': 'Enter',
+	'session.hint-alt-enter': 'Alt+Enter',
+	'session.hint-esc': 'Esc',
+
+	// Widget and menu
+	'widget.pending': 'Translating…',
+	'widget.failed': 'Translation failed, showing the original: {error}',
+	'widget.missing': 'No translation available yet (translations are generated on desktop).',
+	'widget.edit-hint': 'Click to edit this translated sentence',
+	'menu.show-original': 'Show original',
+	'menu.edit-original': 'Edit original',
+
+	// Delete confirmation
+	'confirm-delete.title': 'Delete original text?',
+	'confirm-delete.body': 'The selection contains {count} translated sentences. Deleting removes their {source} originals from the file.',
+	'confirm-delete.delete': 'Delete',
+	'confirm-delete.cancel': 'Cancel',
+
+	// Clear cache confirmation
+	'confirm-clear.title': 'Clear the entire translation cache?',
+	'confirm-clear.body': 'All cached translations in "{folder}" are moved to the trash. They will be requested again (and billed again) when you switch a note to a translated view.',
+	'confirm-clear.confirm': 'Clear cache',
+
+	// Restore modal
+	'restore.placeholder': 'Choose a replaced original to restore',
+	'restore.item': '{date}: {text}',
+
+	// Bulk translation
+	'bulk.choose-folder': 'Choose a folder to translate',
+	'bulk.title': 'Translate folder "{folder}"',
+	'bulk.target': 'Translate into',
+	'bulk.target-both': 'English and German',
+	'bulk.counting': 'Counting…',
+	'bulk.summary': 'About {notes} notes and {sentences} sentences need translating.',
+	'bulk.tokens': 'About {input} input tokens and {output} output tokens.',
+	'bulk.cost': 'Estimated cost: about ${cost}.',
+	'bulk.no-price': 'Set prices in the plugin settings to see a cost estimate.',
+	'bulk.nothing': 'Everything in this folder is already translated.',
+	'bulk.privacy': 'The text of these notes is sent to {endpoint}.',
+	'bulk.start': 'Start',
+	'bulk.cancel': 'Cancel',
+	'bulk.progress': 'Translating {done} / {total} notes…',
+	'bulk.done': 'Translated {notes} notes ({failed} sentences failed).',
+	'bulk.cancelled': 'Folder translation cancelled after {done} notes.',
+	'bulk.stop': 'Stop',
+
+	// Settings: general
+	'settings.mobile-note':
+		'On mobile, Transparent Translate is view-only: it shows translations that were generated on a desktop and synced to this device. No provider is needed here.',
+	'settings.default-mode': 'Default display language',
+	'settings.default-mode.desc': 'Display language of a note when it is opened.',
+	'settings.live-preview': 'Translate in Live Preview',
+	'settings.live-preview.desc': 'Show translations in the editor, not only in Reading view. Tables and callouts are translated in Reading view.',
+	'settings.status-bar': 'Show status bar item',
+	'settings.status-bar.desc': 'Shows OG / EN / DE for the active note.',
+
+	// Settings: provider
+	'settings.heading.provider': 'Translation provider',
+	'settings.privacy':
+		'Note text is sent to the endpoint below for translation. With a local server (such as LM Studio) it stays on this computer. Which provider and plan you use is up to you.',
+	'settings.preset': 'Provider',
+	'settings.preset.desc': 'Fills in the base URL. Every field stays editable.',
+	'settings.base-url': 'Base URL',
+	'settings.base-url.desc': 'OpenAI-compatible API root, for example https://api.openai.com/v1.',
+	'settings.model': 'Model',
+	'settings.model.desc': 'Model id as the provider expects it.',
+	'settings.fetch-models': 'Fetch models',
+	'settings.fetch-models.loading': 'Loading…',
+	'settings.fetch-models.none': 'The server returned no models.',
+	'settings.fetch-models.failed': 'Could not fetch models: {error}',
+	'settings.fetch-models.choose': 'Choose a model',
+	'settings.api-key': 'API key',
+	'settings.api-key.desc': "Stored in Obsidian's secret storage, never in the plugin's data file. Not needed for most local servers.",
+	'settings.test': 'Test connection',
+	'settings.test.desc': 'Translates "Guten Morgen" into English.',
+	'settings.test.button': 'Test',
+	'settings.test.running': 'Testing…',
+	'settings.test.ok': '✓ "{text}" in {ms} ms ({input} input / {output} output tokens)',
+	'settings.test.failed': '✗ {error}',
+	'settings.json-mode': 'JSON mode',
+	'settings.json-mode.desc': 'Ask for a JSON array (response_format). Only for providers that support it. The default line format works with any model.',
+	'settings.temperature': 'Temperature',
+	'settings.temperature.desc': 'Lower is more literal. 0 is recommended.',
+	'settings.max-tokens': 'Max output tokens',
+	'settings.max-tokens.desc': '0 lets the provider decide.',
+	'settings.extra-headers': 'Extra headers',
+	'settings.extra-headers.desc': 'One "Name: value" per line.',
+	'settings.extra-body': 'Extra request parameters',
+	'settings.extra-body.desc': 'JSON object merged into every request, for example {"reasoning_effort": "low"}.',
+	'settings.extra-body.invalid': 'Not a valid JSON object. The value was not saved.',
+	'settings.timeout': 'Timeout (seconds)',
+	'settings.concurrency': 'Parallel requests',
+	'settings.retries': 'Retries',
+	'settings.retries.desc': 'For rate limits, server errors and network errors.',
+	'settings.batch-size': 'Sentences per request',
+
+	// Settings: translation
+	'settings.heading.translation': 'Translation',
+	'settings.glossary': 'Glossary',
+	'settings.glossary.desc': 'Terms that are never translated, one per line.',
+	'settings.wikilink-aliases': 'Translate wikilink aliases',
+	'settings.wikilink-aliases.desc': 'Translate the text after | in [[note|alias]]. Link targets are never translated.',
+	'settings.abbreviations': 'Abbreviations',
+	'settings.abbreviations.desc': 'One per line. A period after these does not end a sentence.',
+	'settings.idle': 'Typing pause (ms)',
+	'settings.idle.desc': 'New text is translated after you stop typing for this long.',
+
+	// Settings: editing
+	'settings.heading.editing': 'Editing in translated views',
+	'settings.session-default': 'When you edit a translated sentence',
+	'settings.session-default.ask': 'Ask',
+	'settings.session-default.replace': 'Always replace the original',
+	'settings.session-default.original': 'Always edit the original',
+	'settings.apply-on-leave': 'Apply edit when clicking elsewhere',
+	'settings.apply-on-leave.desc': 'When off, the edit stays open until you press Enter or Esc.',
+	'settings.confirm-delete': 'Confirm deleting translated text',
+	'settings.confirm-delete.off': 'Never (Undo is offered)',
+	'settings.confirm-delete.translated': 'Ask first',
+	'settings.reset-note-prefs': 'Per-note choices',
+	'settings.reset-note-prefs.desc': '{count} notes remember a "don\'t ask again" choice.',
+	'settings.reset-note-prefs.button': 'Reset',
+
+	// Settings: folders
+	'settings.heading.folders': 'Folders and cache',
+	'settings.excluded': 'Excluded folders',
+	'settings.excluded.desc': 'One folder per line. Notes in these folders are never translated.',
+	'settings.include-only': 'Only translate these folders',
+	'settings.include-only.desc': 'One folder per line. Leave empty to allow all folders.',
+	'settings.cache-folder': 'Cache folder',
+	'settings.cache-folder.desc': 'Where translations are stored. Changing it moves the existing cache.',
+	'settings.cache-folder.apply': 'Move',
+	'settings.exclude-cache': 'Hide the cache from search and graph',
+	'settings.exclude-cache.desc': 'Adds the cache folder to Obsidian\'s Excluded files (Settings → Files and links). Dataview users: add a FROM filter that skips the folder.',
+	'settings.exclude-cache.button': 'Add exclusion',
+	'settings.exclude-cache.done': 'Already excluded',
+
+	// Settings: cost
+	'settings.heading.cost': 'Cost estimate',
+	'settings.cost.desc': 'Optional. Used only for the estimate shown before translating a folder.',
+	'settings.input-price': 'Input price (USD per million tokens)',
+	'settings.output-price': 'Output price (USD per million tokens)',
+	'settings.chars-per-token': 'Characters per token',
+
+	// Settings: advanced
+	'settings.heading.advanced': 'Advanced',
+	'settings.prune': 'Prune unused translations',
+	'settings.prune.desc': 'Remove cached sentences that are no longer in the note after this many days.',
+	'settings.debug': 'Debug logging',
+	'settings.debug.desc': 'Write diagnostic messages to the developer console.',
+} as const;
+
+export type StringKey = keyof typeof en;

@@ -1,0 +1,253 @@
+/*
+ * Transparent Translate
+ * All styling lives here and uses Obsidian's CSS variables, so it follows
+ * the active theme. The plugin never sets inline styles.
+ */
+
+/* ---- Header action and status bar ---- */
+
+.tt-hidden {
+	display: none !important;
+}
+
+.view-action.tt-header-action.is-translated {
+	color: var(--interactive-accent);
+}
+
+.view-action.tt-header-action[data-tt-mode]::after {
+	content: attr(data-tt-mode);
+	font-size: var(--font-ui-smaller);
+	font-weight: var(--font-semibold);
+	margin-inline-start: 2px;
+	letter-spacing: 0.02em;
+}
+
+.view-action.tt-header-action:not(.is-translated)[data-tt-mode]::after {
+	content: none;
+}
+
+.status-bar-item.tt-status {
+	gap: var(--size-2-2);
+	align-items: center;
+}
+
+.tt-status .tt-status-icon {
+	display: inline-flex;
+	color: var(--text-faint);
+}
+
+.tt-status .tt-status-icon svg {
+	width: var(--icon-xs);
+	height: var(--icon-xs);
+}
+
+.tt-status .tt-status-mode {
+	color: var(--text-faint);
+}
+
+.tt-status .tt-status-mode.is-active {
+	color: var(--text-normal);
+	font-weight: var(--font-semibold);
+}
+
+.tt-status .tt-status-sep {
+	color: var(--text-faint);
+}
+
+/* ---- Translation states (reading view and editor) ---- */
+
+.tt-pending,
+.markdown-rendered .tt-pending {
+	opacity: 0.55;
+	transition: opacity 200ms ease-in-out;
+}
+
+.tt-failed,
+.markdown-rendered .tt-failed {
+	text-decoration: underline dotted var(--text-error);
+	text-underline-offset: 3px;
+}
+
+.tt-missing,
+.markdown-rendered .tt-missing {
+	text-decoration: underline dotted var(--text-faint);
+	text-underline-offset: 3px;
+}
+
+/* ---- Translated sentences in Live Preview ---- */
+
+.cm-editor .tt-sentence {
+	cursor: text;
+	border-radius: var(--radius-s);
+	transition: background-color 120ms ease-in-out;
+}
+
+.cm-editor .tt-sentence:hover {
+	background-color: var(--text-highlight-bg);
+	box-shadow: 0 0 0 2px var(--text-highlight-bg);
+}
+
+.cm-editor .tt-sentence p {
+	display: inline;
+	margin: 0;
+}
+
+.cm-editor .tt-sentence a {
+	cursor: pointer;
+}
+
+/* ---- Edit session ---- */
+
+.cm-editor .tt-session {
+	display: inline-block;
+	width: 100%;
+	vertical-align: top;
+	margin: var(--size-2-1) 0;
+}
+
+.tt-session .tt-session-input {
+	display: block;
+	width: 100%;
+	min-height: calc(var(--line-height-normal) * 1em + var(--size-4-2));
+	field-sizing: content;
+	resize: none;
+	font: inherit;
+	color: var(--text-normal);
+	background-color: var(--background-primary);
+	border: 1px solid var(--interactive-accent);
+	border-radius: var(--radius-s);
+	padding: var(--size-2-2) var(--size-4-2);
+	box-shadow: 0 0 0 2px hsla(var(--interactive-accent-hsl), 0.2);
+}
+
+.tt-session .tt-session-banner {
+	margin-top: var(--size-2-3);
+	padding: var(--size-4-2) var(--size-4-3);
+	border-radius: var(--radius-m);
+	background-color: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	font-family: var(--font-interface);
+	font-size: var(--font-ui-small);
+	line-height: var(--line-height-tight);
+}
+
+.tt-session .tt-session-message {
+	color: var(--text-normal);
+	font-weight: var(--font-medium);
+}
+
+.tt-session .tt-session-replaces {
+	margin-top: var(--size-2-2);
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+}
+
+.tt-session .tt-session-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--size-2-3);
+	margin-top: var(--size-4-2);
+}
+
+.tt-session .tt-session-actions button {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--size-2-3);
+	font-size: var(--font-ui-small);
+}
+
+.tt-session .tt-session-actions kbd {
+	font-size: var(--font-ui-smaller);
+	padding: 0 var(--size-2-1);
+	border-radius: var(--radius-s);
+	background-color: var(--background-modifier-hover);
+	color: var(--text-muted);
+	font-family: var(--font-monospace);
+}
+
+.tt-session .tt-session-actions button.mod-cta kbd {
+	background-color: hsla(0, 0%, 100%, 0.2);
+	color: inherit;
+}
+
+.tt-session .tt-session-dont-ask {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--size-2-2);
+	margin-top: var(--size-4-2);
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+	cursor: pointer;
+}
+
+/* ---- Notices ---- */
+
+.notice .tt-notice-undo {
+	margin-inline-start: var(--size-2-3);
+	padding: var(--size-2-1) var(--size-4-2);
+	font-size: var(--font-ui-small);
+}
+
+/* ---- Settings ---- */
+
+.tt-settings .tt-privacy {
+	padding: var(--size-4-2) var(--size-4-3);
+	border-inline-start: 3px solid var(--interactive-accent);
+	background-color: var(--background-secondary);
+	border-radius: var(--radius-s);
+}
+
+.tt-settings .tt-wide-input {
+	width: 100%;
+	min-width: 18em;
+}
+
+.tt-settings .tt-model-control {
+	flex-wrap: wrap;
+}
+
+.tt-settings .tt-number-input {
+	width: 7em;
+}
+
+.tt-settings textarea {
+	min-width: 18em;
+	min-height: 4em;
+	font-family: var(--font-monospace);
+	font-size: var(--font-ui-small);
+}
+
+.tt-settings .tt-test-result {
+	margin-top: var(--size-2-2);
+	font-family: var(--font-monospace);
+	font-size: var(--font-ui-smaller);
+}
+
+.tt-settings .tt-test-result.mod-success {
+	color: var(--text-success);
+}
+
+.tt-settings .tt-test-result.mod-warning,
+.tt-settings .tt-input-error {
+	color: var(--text-error);
+}
+
+/* ---- Bulk translation and restore ---- */
+
+.tt-bulk-summary p {
+	margin: var(--size-2-2) 0;
+}
+
+.tt-bulk-summary .tt-bulk-cost {
+	font-weight: var(--font-semibold);
+}
+
+.tt-bulk-summary .tt-bulk-hint,
+.tt-bulk-privacy {
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
+}
+
+.tt-restore-date {
+	color: var(--text-muted);
+}

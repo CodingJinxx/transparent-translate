@@ -39,7 +39,7 @@ export function parseNumberedOutput(output: string, count: number): ParseResult 
 	}
 	const missing = texts.findIndex((t) => t === undefined);
 	if (missing !== -1) return { ok: false, reason: `missing marker <<${missing + 1}>>` };
-	return { ok: true, texts: texts as string[] };
+	return { ok: true, texts: texts.map((t) => t ?? '') };
 }
 
 export function parseJsonOutput(output: string, count: number): ParseResult {
@@ -58,5 +58,5 @@ export function parseJsonOutput(output: string, count: number): ParseResult {
 	if (!Array.isArray(list)) return { ok: false, reason: 'JSON output has no array' };
 	if (list.length !== count) return { ok: false, reason: `expected ${count} items, got ${list.length}` };
 	if (!list.every((x) => typeof x === 'string')) return { ok: false, reason: 'JSON array contains non-strings' };
-	return { ok: true, texts: (list as string[]).map((t) => t.trim()) };
+	return { ok: true, texts: list.map((x: unknown) => String(x).trim()) };
 }

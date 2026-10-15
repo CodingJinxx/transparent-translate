@@ -54,11 +54,11 @@ type Sleep = (ms: number, signal?: AbortSignal) => Promise<void>;
 
 const defaultSleep: Sleep = (ms, signal) =>
 	new Promise((resolve, reject) => {
-		const timer = setTimeout(resolve, ms);
+		const timer = window.setTimeout(resolve, ms);
 		signal?.addEventListener(
 			'abort',
 			() => {
-				clearTimeout(timer);
+				window.clearTimeout(timer);
 				reject(new TranslatorError('Request cancelled', 'aborted'));
 			},
 			{ once: true },
@@ -265,17 +265,17 @@ export class LlmTranslator implements Translator {
 
 	private withTimeout<T>(promise: Promise<T>, timeoutMs: number, signal?: AbortSignal): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
-			const timer = timeoutMs > 0 ? setTimeout(() => reject(new TranslatorError(`Timed out after ${Math.round(timeoutMs / 1000)} s`, 'timeout')), timeoutMs) : null;
+			const timer = timeoutMs > 0 ? window.setTimeout(() => reject(new TranslatorError(`Timed out after ${Math.round(timeoutMs / 1000)} s`, 'timeout')), timeoutMs) : null;
 			const onAbort = () => reject(new TranslatorError('Request cancelled', 'aborted'));
 			signal?.addEventListener('abort', onAbort, { once: true });
 			promise.then(
 				(value) => {
-					if (timer) clearTimeout(timer);
+					if (timer) window.clearTimeout(timer);
 					signal?.removeEventListener('abort', onAbort);
 					resolve(value);
 				},
 				(error: unknown) => {
-					if (timer) clearTimeout(timer);
+					if (timer) window.clearTimeout(timer);
 					signal?.removeEventListener('abort', onAbort);
 					reject(error instanceof Error ? error : new Error(String(error)));
 				},
