@@ -150,6 +150,10 @@ describe('sentence splitting', () => {
 		['dates', 'Am 14. Oktober beginnt es. Gut.', ['Am 14. Oktober beginnt es.', 'Gut.']],
 		['urls', 'Siehe https://a.de/x.html für mehr. Ok.', ['Siehe https://a.de/x.html für mehr.', 'Ok.']],
 		['math with periods', 'Es gilt $a.b = 1$. Fertig.', ['Es gilt $a.b = 1$.', 'Fertig.']],
+		['bold lead-in ending in a period', '- **SW und HW gehören zusammen (Folien 4–6).** Software abstrahiert. Ende.', ['**SW und HW gehören zusammen (Folien 4–6).**', 'Software abstrahiert.', 'Ende.']],
+		['italic lead-in', '*Wichtig (Folie 3).* Rest des Satzes.', ['*Wichtig (Folie 3).*', 'Rest des Satzes.']],
+		['highlight and strike lead-ins', '==Merke.== Dann ~~Alt.~~ Neu.', ['==Merke.==', 'Dann ~~Alt.~~', 'Neu.']],
+		['bold ending with a colon stays whole', '**Software:** GNU-Toolchain. Mehr.', ['**Software:** GNU-Toolchain.', 'Mehr.']],
 	])('handles %s', (_name, source, expected) => {
 		expect(texts(source)).toEqual(expected);
 	});

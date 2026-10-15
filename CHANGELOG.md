@@ -4,9 +4,16 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-15
+
 ### Added
 
 - Optional translated file and folder names in the file explorer, tab titles, note titles and breadcrumbs (setting and commands "Show file and folder names in …"). Only the display changes; the real name is shown while renaming. Translations are cached in `_Translations/_names.md`.
+
+### Fixed
+
+- A bold, italic, highlighted or struck-through lead-in that ends in a period (`**Lead-in (ref).** Rest of the sentence.`) is no longer split inside the emphasis: the closing marker stays with the sentence it closes, so both sentences render with balanced markers. Affected sentences are translated again once.
+- Sentence boundaries are never placed inside a placeholder, which previously could cut a highlight marker (`==text.==`) in two.
 
 ## [0.1.1] - 2026-10-15
 
@@ -35,6 +42,7 @@ First release.
 - View-only mode on mobile (no requests, no key).
 - English and German interface.
 
-[Unreleased]: https://github.com/CodingJinxx/transparent-translate/compare/0.1.1...HEAD
+[Unreleased]: https://github.com/CodingJinxx/transparent-translate/compare/0.2.0...HEAD
+[0.2.0]: https://github.com/CodingJinxx/transparent-translate/compare/0.1.1...0.2.0
 [0.1.1]: https://github.com/CodingJinxx/transparent-translate/compare/0.1.0...0.1.1
 [0.1.0]: https://github.com/CodingJinxx/transparent-translate/releases/tag/0.1.0

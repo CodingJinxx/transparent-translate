@@ -164,8 +164,20 @@ function abbreviationAtBoundary(previous: string, next: string, abbreviations: r
 	return /(?:^|\s)\d{1,2}\.$/.test(head) && DATE_CONTINUATION.test(next.trimStart());
 }
 
+/** An emphasis marker at the start of a segment that is followed by a space can only be a closing one. */
+const CLOSING_MARKER = /^(?:\*{1,3}|_{1,3}|~~|==)(?=\s)/;
+
 const DATE_CONTINUATION =
 	/^(?:\d|Jan|Feb|M[aä]r|Apr|Ma[iy]|Jun|Jul|Aug|Sep|O[ck]t|Nov|De[cz])/;
+
+/** The segmenter may break inside a placeholder (`⟦` | `2⟧`): move such a boundary behind it. */
+function outsidePlaceholder(masked: string, index: number): number {
+	if (index <= 0) return index;
+	const open = masked.lastIndexOf('⟦', index - 1);
+	if (open === -1 || open < masked.lastIndexOf('⟧', index - 1)) return index;
+	const close = masked.indexOf('⟧', index);
+	return close === -1 ? index : close + 1;
+}
 
 /** Splits a unit into sentence ranges (absolute offsets). */
 export function splitSentences(text: string, unit: Unit, opts: SegmentOptions): Unit[] {
@@ -177,13 +189,20 @@ export function splitSentences(text: string, unit: Unit, opts: SegmentOptions): 
 	// Merge segments that were split after an abbreviation or before a lowercase continuation.
 	const merged: number[] = [];
 	for (let k = 0; k < starts.length; k++) {
-		const start = starts[k]!;
+		const start = outsidePlaceholder(masked.masked, starts[k]!);
 		const prevStart = merged[merged.length - 1];
+		if (prevStart !== undefined && start <= prevStart) continue;
 		if (prevStart !== undefined) {
 			const previous = masked.masked.slice(prevStart, start);
 			const next = masked.masked.slice(start, starts[k + 1] ?? masked.masked.length);
 			const nextChar = next.trimStart()[0] ?? '';
 			if (abbreviationAtBoundary(previous, next, opts.abbreviations) || /\p{Ll}/u.test(nextChar)) continue;
+			// "**Lead-in.** Rest": the closing marker belongs to the sentence it closes.
+			const closing = CLOSING_MARKER.exec(next)?.[0];
+			if (closing && previous.split(closing).length % 2 === 0) {
+				merged.push(start + closing.length);
+				continue;
+			}
 		}
 		merged.push(start);
 	}
