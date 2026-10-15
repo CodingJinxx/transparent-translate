@@ -21,7 +21,7 @@ Frames go to a folder in the system temp directory (or `TT_DEMO_OUT`), never int
 
 ## Website
 
-The site is plain HTML and CSS in `site/`, with one small local script for the music button. It loads nothing from other sites, sets no cookies and has no analytics. The workflow `.github/workflows/pages.yml` copies `site/` and the images it uses from `docs/images/` into one folder and publishes it to GitHub Pages on every push to `main` that touches them.
+The site is plain HTML and CSS in `site/`, with one small local script for the music button, plus the Buy Me a Coffee donation button (a script from `cdnjs.buymeacoffee.com`, the only thing loaded from another site). It sets no cookies of its own and has no analytics. The workflow `.github/workflows/pages.yml` copies `site/` and the images it uses from `docs/images/` into one folder and publishes it to GitHub Pages on every push to `main` that touches them.
 
 To preview it locally, copy the same files into a folder and serve it:
 
