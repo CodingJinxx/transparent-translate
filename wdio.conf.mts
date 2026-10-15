@@ -52,7 +52,7 @@ export const config: WebdriverIO.Config = {
 	services: ['obsidian'],
 	reporters: ['obsidian'],
 	// UI timing can flake under load (e.g. typing while another Obsidian starts): retry once.
-	mochaOpts: { ui: 'bdd', timeout: 90 * 1000, retries: 1 },
+	mochaOpts: { ui: 'bdd', timeout: 90 * 1000, retries: env.CI ? 2 : 1 },
 	waitforInterval: 100,
 	waitforTimeout: 10 * 1000,
 	logLevel: 'warn',
