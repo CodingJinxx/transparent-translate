@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-15
+
+### Added
+
+- **User guide** inside Obsidian: the command **Open user guide** and a button in the settings open a guide with a section list (a dropdown on phones), in English or German. The text lives in `docs/guide.en.md` and `docs/guide.de.md`.
+- **Endpoint check.** When the translation endpoint cannot be reached, a note that has no translation yet is no longer switched; a notice explains why. Notes that are already translated still switch. The check runs only when requests would be needed, is trusted for 30 seconds, and a failed check is repeated on the next try. **Translate folder…** and **Review terms in this note…** check it too.
+
 ## [0.3.0] - 2026-10-15
 
 ### Added
@@ -76,7 +83,8 @@ First release.
 - View-only mode on mobile (no requests, no key).
 - English and German interface.
 
-[Unreleased]: https://github.com/CodingJinxx/transparent-translate/compare/0.3.0...HEAD
+[Unreleased]: https://github.com/CodingJinxx/transparent-translate/compare/0.4.0...HEAD
+[0.4.0]: https://github.com/CodingJinxx/transparent-translate/compare/0.3.0...0.4.0
 [0.3.0]: https://github.com/CodingJinxx/transparent-translate/compare/0.2.2...0.3.0
 [0.2.2]: https://github.com/CodingJinxx/transparent-translate/compare/0.2.1...0.2.2
 [0.2.1]: https://github.com/CodingJinxx/transparent-translate/compare/0.2.0...0.2.1

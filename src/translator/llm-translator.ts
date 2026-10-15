@@ -162,6 +162,30 @@ export class LlmTranslator implements Translator {
 		return { items: results, usage, model: config.model };
 	}
 
+	/**
+	 * True if the endpoint answers at all. Any HTTP response counts (a missing
+	 * `/models` route or a rejected key still means the server is there); only
+	 * network errors and timeouts do not.
+	 */
+	async ping(timeoutMs = 3000): Promise<boolean> {
+		const config = this.getConfig();
+		if (!/^https?:\/\//i.test(config.baseUrl.trim())) return false;
+		let timer: number | undefined;
+		try {
+			await Promise.race([
+				this.http({ url: joinUrl(config.baseUrl, 'models'), method: 'GET', headers: this.headers(config) }),
+				new Promise<never>((_, reject) => {
+					timer = window.setTimeout(() => reject(new TranslatorError('Endpoint did not answer', 'timeout')), timeoutMs);
+				}),
+			]);
+			return true;
+		} catch {
+			return false;
+		} finally {
+			if (timer !== undefined) window.clearTimeout(timer);
+		}
+	}
+
 	/** Asks which terms of a translation were a judgment call. See `core/term-review`. */
 	async reviewTerms(
 		pairs: readonly ReviewPair[],

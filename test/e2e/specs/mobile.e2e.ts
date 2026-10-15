@@ -1,4 +1,4 @@
-import { browser, expect } from '@wdio/globals';
+import { $, browser, expect } from '@wdio/globals';
 import { before, describe, it } from 'mocha';
 import { configure, editorValue, freshVault, mockStats, openNote, readingText } from '../helpers';
 import { serializeCache, emptyCache } from '../../../src/core/cache-format';
@@ -79,5 +79,18 @@ describe('Mobile (view-only)', function () {
 		await browser.waitUntil(async () => (await readingText()).includes('This is the first sentence (synced).'));
 		await browser.pause(1000);
 		expect((await mockStats()).requests).toBe(before);
+	});
+
+	it('opens the user guide with a section dropdown', async function () {
+		await browser.executeObsidianCommand('transparent-translate:open-guide');
+		await $('.tt-guide-modal').waitForDisplayed();
+		const options = await browser.execute(() => [...document.querySelectorAll('.tt-guide-nav select option')].map((o) => o.textContent));
+		expect(options.length).toBeGreaterThanOrEqual(8);
+		expect(await $('.tt-guide-body h2').getText()).toBe('Welcome');
+		await $('.tt-guide-nav select').selectByIndex(1);
+		await browser.waitUntil(async () => (await $('.tt-guide-body h2').getText()) === 'Set up', { timeoutMsg: 'second section was not shown' });
+		await $('.tt-guide-footer button.mod-cta').click();
+		await browser.waitUntil(async () => (await $('.tt-guide-body h2').getText()) === options[2], { timeoutMsg: 'Next did not advance' });
+		await browser.keys('Escape');
 	});
 });

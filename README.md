@@ -32,6 +32,10 @@ Transparent Translate adds a language switch to every note: **Original → Engli
 - **Mobile: view-only.** Phones and tablets show translations that were generated on a desktop and synced. They never call an API and need no key.
 - **English and German interface**, following Obsidian's language setting.
 
+## User guide
+
+The command **Open user guide** (also a button at the top of the settings) opens a guide inside Obsidian: setup, switching languages, editing, the glossary, file names, storage, mobile, privacy and troubleshooting, in English or German to match Obsidian's language. The same text is in [docs/guide.en.md](docs/guide.en.md) and [docs/guide.de.md](docs/guide.de.md).
+
 ## Editing a translated sentence
 
 ![An inline editor over a translated sentence with the buttons "Replace original with English", "Edit German original instead" and "Cancel"](docs/images/edit-session.png)
@@ -92,6 +96,7 @@ No command has a default hotkey; bind your own under **Settings → Hotkeys**.
 | Show original / Show English / Show German | Set the display language of the current note. |
 | Cycle display language | Original → English → German. |
 | Show file and folder names in original / English / German | Sets the language of names in the explorer, tabs and titles. Off by default. |
+| Open user guide | Opens the guide inside Obsidian. |
 | Fix the translation of a sentence… | Pick a translated sentence and correct a term (also available from the right-click menu of a translated sentence). |
 | Review terms in this note… | Asks the model which terms were a judgment call and lets you settle them. |
 | Manage translation glossary | List, add, edit and delete glossary entries and the subject area of a scope. |
@@ -150,6 +155,7 @@ On Obsidian mobile the plugin is **view-only**: switch between Original, English
 ## Limitations
 
 - Search, backlinks and other plugins only see the original text.
+- If the translation endpoint cannot be reached, a note that has no translation yet is not switched (a notice says why). Notes that are already translated still switch, because everything they need is in the cache.
 - Translated names are a display layer: the quick switcher, search, graph, links and the explorer's sort order keep using the real names, so translated rows can look unsorted. If two siblings would show the same translated name, both keep their original.
 - Translation is between English and German.
 - In Live Preview, translations are shown sentence by sentence inside paragraphs, headings and lists. Tables and callouts are translated in Reading view.

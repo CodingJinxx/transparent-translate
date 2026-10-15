@@ -8,6 +8,7 @@ import { BulkTranslateModal, FolderSuggestModal } from './ui/bulk-translate';
 import { ConfirmModal } from './ui/confirm-modal';
 import { CorrectionModal, FixSentenceModal, type CorrectionRequest } from './ui/correction-modal';
 import { GlossaryModal } from './ui/glossary-modal';
+import { GuideModal } from './ui/guide-modal';
 import { TermReviewModal } from './ui/term-review-modal';
 import type { ReviewPair } from './core/term-review';
 import { RestoreOriginalModal } from './ui/restore-modal';
@@ -118,7 +119,10 @@ export function registerCommands(plugin: TransparentTranslatePlugin): void {
 				new Notice(t('notice.no-provider'));
 				return true;
 			}
-			new FolderSuggestModal(plugin, (folder) => new BulkTranslateModal(plugin, folder).open()).open();
+			void plugin.endpoint.check().then((reachable) => {
+				if (!reachable) new Notice(t('notice.endpoint-unreachable-short'), 8000);
+				else new FolderSuggestModal(plugin, (folder) => new BulkTranslateModal(plugin, folder).open()).open();
+			});
 			return true;
 		},
 	});
@@ -162,6 +166,12 @@ export function registerCommands(plugin: TransparentTranslatePlugin): void {
 			});
 			return true;
 		},
+	});
+
+	plugin.addCommand({
+		id: 'open-guide',
+		name: t('command.open-guide'),
+		callback: () => new GuideModal(plugin).open(),
 	});
 
 	// ---- Glossary -------------------------------------------------------
@@ -279,6 +289,10 @@ async function reviewTerms(plugin: TransparentTranslatePlugin, path: string, mod
 	}
 	if (pairs.length === 0) {
 		new Notice(t('review.no-translations'));
+		return;
+	}
+	if (!(await plugin.endpoint.check())) {
+		new Notice(t('notice.endpoint-unreachable-short'), 8000);
 		return;
 	}
 	new Notice(t('review.running'));

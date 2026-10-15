@@ -12,6 +12,11 @@ export function setLanguage(language: string): void {
 	table = language.toLowerCase().startsWith('de') ? de : en;
 }
 
+/** The language of the interface strings in use. */
+export function currentLanguage(): 'de' | 'en' {
+	return table === de ? 'de' : 'en';
+}
+
 /** Translates a UI string. `{name}` placeholders are replaced from `vars`. */
 export function t(key: StringKey, vars?: Record<string, string | number>): string {
 	const template = table[key] ?? en[key];

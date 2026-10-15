@@ -13,11 +13,13 @@ import { log, setDebug } from './log';
 import { ModeManager } from './modes';
 import { VaultCacheBackend } from './obsidian/vault-backend';
 import { CacheStore } from './services/cache-store';
+import { EndpointMonitor } from './services/endpoint-monitor';
 import { GlossaryStore } from './services/glossary-store';
 import { NameService } from './services/name-service';
 import { NameStore } from './services/name-store';
 import { TranslationService } from './services/translation-service';
 import { DerivedSettings, mergeSettings, type TransparentTranslateSettings } from './settings';
+import { TranslatorError } from './translator/translator';
 import { LlmTranslator, parseExtraBody, parseHeaderLines, type HttpClient, type LlmConfig } from './translator/llm-translator';
 import { registerCommands } from './commands';
 import { ConfirmModal } from './ui/confirm-modal';
@@ -42,6 +44,7 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 	nameStore!: NameStore;
 	names!: NameService;
 	glossary!: GlossaryStore;
+	endpoint!: EndpointMonitor;
 	translator: LlmTranslator | null = null;
 	readonly isMobile = Platform.isMobile;
 
@@ -68,6 +71,7 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 		});
 		// Mobile is view-only: no translator, so no requests and no API key.
 		if (!this.isMobile) this.translator = new LlmTranslator(() => this.llmConfig(), obsidianHttp);
+		this.endpoint = new EndpointMonitor(() => this.translator?.ping() ?? Promise.resolve(false));
 		this.glossary = new GlossaryStore(new VaultCacheBackend(this.app), { path: () => this.settings.glossaryFile, saveDelayMs: 800 });
 		this.service = new TranslationService({
 			store: this.store,
@@ -149,6 +153,7 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 
 	async saveSettings(): Promise<void> {
 		this.derived.invalidate();
+		this.endpoint?.reset();
 		setDebug(this.settings.debugLogging);
 		await this.saveData(this.settings);
 	}
@@ -220,7 +225,7 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 			this.resolvers.clear();
 			this.resolverEpoch = this.glossary.epoch;
 		}
-		const key = `${target} ${path}`;
+		const key = `${target}\u0000${path}`;
 		if (this.resolvers.has(key)) return this.resolvers.get(key) ?? null;
 		const data = this.glossary.data;
 		const empty = Object.keys(data.entries).length === 0 && Object.keys(data.domains).length === 0;
@@ -279,6 +284,38 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 			new Notice(t('notice.excluded'));
 			return;
 		}
+		// A note without any translation needs the endpoint: check it before switching, so nothing half-translated is shown.
+		if (isTargetLanguage(mode) && this.modeOf(leaf, path) !== mode && this.service.canTranslate && this.hasProvider()) {
+			void this.switchIfAvailable(leaf, view, path, mode);
+			return;
+		}
+		this.applyMode(leaf, view, path, mode);
+	}
+
+	/**
+	 * Switches to a translated mode unless the note has no translation yet and the
+	 * endpoint cannot be reached. Notes that are translated (even partly) always switch.
+	 */
+	private async switchIfAvailable(leaf: WorkspaceLeaf, view: MarkdownView, path: string, mode: TargetLanguage): Promise<void> {
+		await this.store.load(path);
+		const note = this.parse(path, view.getViewData());
+		let translated = 0;
+		let needed = 0;
+		for (const sentence of note.sentences) {
+			const kind = this.service.display(path, sentence, mode).kind;
+			if (kind === 'translated') translated++;
+			else if (kind === 'missing' || kind === 'pending' || kind === 'failed') needed++;
+		}
+		if (needed > 0 && translated === 0 && !(await this.endpoint.check())) {
+			new Notice(t('notice.endpoint-unreachable'), 10_000);
+			return;
+		}
+		// The view may have changed while the endpoint was checked.
+		if (leaf.view !== view || view.file?.path !== path) return;
+		this.applyMode(leaf, view, path, mode);
+	}
+
+	private applyMode(leaf: WorkspaceLeaf, view: MarkdownView, path: string, mode: DisplayMode): void {
 		this.modes.set(leaf, path, mode);
 		this.service.clearFailures(path);
 		resetAnimations(path);
@@ -421,6 +458,7 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 		// One notice per distinct message every 15 seconds.
 		if (error.message === this.lastErrorNotice.message && now - this.lastErrorNotice.at < 15_000) return;
 		this.lastErrorNotice = { message: error.message, at: now };
+		if (error instanceof TranslatorError && (error.kind === 'network' || error.kind === 'timeout')) this.endpoint.markUnreachable();
 		log.error('Translation failed', error);
 		new Notice(t('notice.translation-error', { error: error.message }), 8000);
 	}

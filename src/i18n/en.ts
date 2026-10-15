@@ -313,6 +313,16 @@ export const en = {
 	'review.no-translations': 'There are no translated sentences to review yet.',
 	'review.running': 'Reviewing terms…',
 	'review.none': 'No unclear terms found.',
+	'guide.title': 'Transparent Translate: user guide',
+	'guide.previous': 'Previous',
+	'guide.next': 'Next',
+	'guide.online': 'Also on GitHub',
+	'command.open-guide': 'Open user guide',
+	'settings.guide': 'User guide',
+	'settings.guide.desc': 'How to set up the plugin, switch languages, edit translated notes and teach it your terms.',
+	'settings.guide.button': 'Open user guide',
+	'notice.endpoint-unreachable': 'Translation is not available: the translation endpoint cannot be reached, and this note has no translation yet. Check Settings → Transparent Translate.',
+	'notice.endpoint-unreachable-short': 'The translation endpoint cannot be reached. Check Settings → Transparent Translate.',
 } as const;
 
 export type StringKey = keyof typeof en;

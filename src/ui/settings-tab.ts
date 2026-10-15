@@ -6,6 +6,7 @@ import type TransparentTranslatePlugin from '../main';
 import { addExcludedFolder, canEditExcludedFiles, isFolderExcluded } from '../obsidian/internals';
 import { DEFAULT_SETTINGS, type ConfirmDelete, type EditSessionDefault } from '../settings';
 import { GlossaryModal } from './glossary-modal';
+import { GuideModal } from './guide-modal';
 import { PROVIDER_PRESETS, presetById, type ProviderPresetId } from '../translator/providers';
 import { parseExtraBody } from '../translator/llm-translator';
 
@@ -45,6 +46,11 @@ export class TransparentTranslateSettingTab extends PluginSettingTab {
 		if (this.plugin.isMobile) {
 			containerEl.createEl('p', { cls: 'setting-item-description', text: t('settings.mobile-note') });
 		}
+
+		new Setting(containerEl)
+			.setName(t('settings.guide'))
+			.setDesc(t('settings.guide.desc'))
+			.addButton((button) => button.setButtonText(t('settings.guide.button')).setCta().onClick(() => new GuideModal(this.plugin).open()));
 
 		this.displaySection();
 		if (!this.plugin.isMobile) {
