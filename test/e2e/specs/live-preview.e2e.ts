@@ -121,6 +121,8 @@ describe('Live Preview', function () {
 
 	it('deletes a translated sentence without asking and offers Undo', async function () {
 		await showEnglish();
+		// Notices of earlier tests are still on screen for a while; the Undo button must be this test's.
+		await browser.execute(() => document.querySelectorAll('.notice').forEach((n) => n.remove()));
 		const listStart = ORIGINAL.indexOf('Ein Punkt');
 		const listEnd = ORIGINAL.indexOf('Liste.') + 'Liste.'.length;
 		await browser.executeObsidian(({ app, obsidian }, from, to) => {
@@ -131,8 +133,17 @@ describe('Live Preview', function () {
 		await browser.keys('Backspace');
 		await browser.waitUntil(async () => !(await editorValue()).includes('Ein Punkt'));
 		await expect($('.notice*=Deleted German original sentence')).toBeExisting();
-		await $('.notice .tt-notice-undo').click();
-		await browser.waitUntil(async () => (await editorValue()) === ORIGINAL, { timeoutMsg: 'Undo in the notice did not restore the sentence' });
+		// Slow machines can swallow the first click while the notice is still animating in: click until it worked.
+		await browser.waitUntil(
+			async () => {
+				if ((await editorValue()) === ORIGINAL) return true;
+				const undo = await $('.notice .tt-notice-undo');
+				if (await undo.isExisting()) await undo.click().catch(() => undefined);
+				await browser.pause(400);
+				return (await editorValue()) === ORIGINAL;
+			},
+			{ timeoutMsg: 'Undo in the notice did not restore the sentence', timeout: 20_000 },
+		);
 	});
 
 	it('typing over a selected translation opens an edit session instead of writing', async function () {

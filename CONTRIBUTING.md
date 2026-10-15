@@ -67,11 +67,26 @@ The plugin is meant for the Obsidian community directory, so these are hard rule
 - UI text in sentence case. Every new string goes into both `src/i18n/en.ts` and `src/i18n/de.ts`.
 - Never commit API keys, private notes or personal data.
 
+## Workflow
+
+`main` is protected: nothing is pushed to it directly. Every change, including releases, goes through a pull request.
+
+1. Branch from `main` (`git switch -c fix/short-name`) and commit there.
+2. Run `npm run check` (and `npm run test:e2e` when views or editing change) before you push.
+3. Open a pull request. CI must pass: **Check (Node 22.x)**, **Check (Node 24.x)** and **End-to-end (Obsidian)**, and the branch must be up to date with `main`. Open conversations must be resolved.
+4. Merge with **Squash and merge** (or enable auto-merge, which waits for the checks). The branch is deleted afterwards.
+
+The end-to-end job drives a real Obsidian and can fail for timing reasons on a slow runner. A failure is a reason to look at the log first; if it is a flaky wait, fix the test (retry the click, wait for the condition) rather than re-running until it is green. **Re-run failed jobs** is fine for a one-off runner problem.
+
 ## Releasing
 
-1. Move the "Unreleased" entries in `CHANGELOG.md` under a new version heading.
-2. Run `npm version <x.y.z>` (no leading `v`). This updates `package.json`, `manifest.json` and `versions.json` and creates a tag.
-3. `git push --follow-tags`.
-4. The release workflow checks that the tag matches `manifest.json`, runs all checks, builds, attests the build and creates a **draft** GitHub release with `main.js`, `manifest.json` and `styles.css`. Review it and publish.
+The release is a pull request, then a tag on the merged commit.
+
+1. `git switch -c release/<x.y.z>` from an up-to-date `main`.
+2. Move the "Unreleased" entries in `CHANGELOG.md` under a new version heading.
+3. Run `npm version <x.y.z> --no-git-tag-version` (no leading `v`). This updates `package.json`, `manifest.json` and `versions.json`. Commit all of them.
+4. Open the pull request, wait for CI, merge it.
+5. Tag the merge commit and push the tag: `git switch main && git pull && git tag <x.y.z> && git push origin <x.y.z>`.
+6. The release workflow checks that the tag matches `manifest.json`, runs all checks, builds, attests the build and creates a **draft** GitHub release with `main.js`, `manifest.json` and `styles.css`. Review it and publish.
 
 Bump `minAppVersion` in `manifest.json` (and the pinned `obsidian` dev dependency) only when a newer API is actually used.

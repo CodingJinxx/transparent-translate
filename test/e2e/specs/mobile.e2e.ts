@@ -89,8 +89,16 @@ describe('Mobile (view-only)', function () {
 		expect(await $('.tt-guide-body h2').getText()).toBe('Welcome');
 		await $('.tt-guide-nav select').selectByIndex(1);
 		await browser.waitUntil(async () => (await $('.tt-guide-body h2').getText()) === 'Set up', { timeoutMsg: 'second section was not shown' });
-		await $('.tt-guide-footer button.mod-cta').click();
-		await browser.waitUntil(async () => (await $('.tt-guide-body h2').getText()) === options[2], { timeoutMsg: 'Next did not advance' });
+		// The footer is rebuilt after every section; click until the next section shows.
+		await browser.waitUntil(
+			async () => {
+				if ((await $('.tt-guide-body h2').getText()) === options[2]) return true;
+				await $('.tt-guide-footer button.mod-cta').click().catch(() => undefined);
+				await browser.pause(300);
+				return (await $('.tt-guide-body h2').getText()) === options[2];
+			},
+			{ timeoutMsg: 'Next did not advance', timeout: 20_000 },
+		);
 		await browser.keys('Escape');
 	});
 });

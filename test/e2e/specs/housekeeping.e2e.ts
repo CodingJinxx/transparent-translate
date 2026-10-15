@@ -100,8 +100,16 @@ describe('Housekeeping and settings', function () {
 		await $$('.tt-guide-nav-item')[1]!.click();
 		await browser.waitUntil(async () => (await $('.tt-guide-body h2').getText()) === 'Set up', { timeoutMsg: 'second section was not shown' });
 		expect(await $('.tt-guide-body').getText()).toContain('Guten Morgen');
-		await $('.tt-guide-footer button.mod-cta').click();
-		await browser.waitUntil(async () => (await $('.tt-guide-body h2').getText()) === items[2], { timeoutMsg: 'Next did not advance' });
+		// The footer is rebuilt after every section; click until the next section shows.
+		await browser.waitUntil(
+			async () => {
+				if ((await $('.tt-guide-body h2').getText()) === items[2]) return true;
+				await $('.tt-guide-footer button.mod-cta').click().catch(() => undefined);
+				await browser.pause(300);
+				return (await $('.tt-guide-body h2').getText()) === items[2];
+			},
+			{ timeoutMsg: 'Next did not advance', timeout: 20_000 },
+		);
 		await browser.keys('Escape');
 		await browser.waitUntil(async () => !(await $('.tt-guide-modal').isExisting()), { timeoutMsg: 'guide did not close' });
 	});

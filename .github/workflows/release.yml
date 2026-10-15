@@ -1,7 +1,8 @@
 name: Release
 
-# Push a tag that equals the version in manifest.json (no leading "v"), e.g.:
-#   npm version 0.2.0 && git push --follow-tags
+# Push a tag that equals the version in manifest.json (no leading "v") on the merged `main` commit.
+# `main` only changes through pull requests, so merge the release PR first (see CONTRIBUTING.md), then:
+#   git switch main && git pull && git tag 0.2.0 && git push origin 0.2.0
 on:
   push:
     tags:
