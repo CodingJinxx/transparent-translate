@@ -11,6 +11,7 @@ import { lineEnd } from '../core/text';
 import { isTargetLanguage, type TargetLanguage } from '../core/types';
 import type { TranslateHost } from '../host';
 import { log } from '../log';
+import { animationKey, claimAnimation, decode } from './decode-animation';
 
 export const MARKER_PREFIX = 'tt';
 
@@ -154,6 +155,11 @@ export class ReadingViewController {
 		el.toggleClass('tt-has-pending', markdown.pending);
 		el.setAttr('lang', mode);
 		section.shown = markdown.text;
+		if (this.host.settings.animateTranslations) {
+			el.querySelectorAll<HTMLElement>('span.tt-s[data-tt]').forEach((span) => {
+				if (claimAnimation(animationKey(section.path, mode, span.dataset.tt ?? ''))) decode(span);
+			});
+		}
 	}
 
 	private restore(section: Section): void {
@@ -193,7 +199,7 @@ export class ReadingViewController {
 				}
 				return display;
 			},
-			{ markerClassPrefix: MARKER_PREFIX },
+			{ markerClassPrefix: MARKER_PREFIX, wrapTranslated: host.settings.animateTranslations },
 		);
 		if (missing) host.service.request(path, note, note.sentences, mode, host.noteTitle(path));
 		if (composed.translated + composed.pending + composed.failed + composed.missing === 0) return null;

@@ -36,6 +36,7 @@ export interface TransparentTranslateSettings {
 	// Display
 	defaultMode: DisplayMode;
 	livePreview: boolean;
+	animateTranslations: boolean;
 	statusBar: boolean;
 
 	// Editing in translated views
@@ -82,6 +83,7 @@ export const DEFAULT_SETTINGS: TransparentTranslateSettings = {
 
 	defaultMode: 'original',
 	livePreview: true,
+	animateTranslations: true,
 	statusBar: true,
 
 	editSessionDefault: 'ask',

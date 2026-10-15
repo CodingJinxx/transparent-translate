@@ -20,6 +20,7 @@ import {
 	type TranslatedRange,
 	type TranslationState,
 } from './state';
+import { animationKey, claimAnimation } from '../decode-animation';
 import { SentenceWidget, SessionWidget, type SentenceWidgetHandlers, type SessionWidgetHandlers } from './widgets';
 
 /** The language a translated sentence was written in. With two languages, it is the other one. */
@@ -77,7 +78,16 @@ export function createLivePreviewExtension(host: TranslateHost): Extension {
 			switch (d.kind) {
 				case 'translated': {
 					const widget = Decoration.replace({
-						widget: new SentenceWidget(d.text, s.hash, mode, host.app, path, sentenceHandlers, readOnly),
+						widget: new SentenceWidget(
+							d.text,
+							s.hash,
+							mode,
+							host.app,
+							path,
+							sentenceHandlers,
+							readOnly,
+							host.settings.animateTranslations && claimAnimation(animationKey(path, mode, s.hash)),
+						),
 					});
 					decorations.push(widget.range(s.from, s.to));
 					atomic.push(widget.range(s.from, s.to));

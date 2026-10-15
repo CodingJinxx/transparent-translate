@@ -251,3 +251,10 @@
 .tt-restore-date {
 	color: var(--text-muted);
 }
+
+/* ---- Decode animation ---- */
+
+.tt-decoding {
+	color: var(--text-accent);
+	transition: color 300ms ease-out;
+}

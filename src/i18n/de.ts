@@ -105,6 +105,8 @@ export const de: Record<StringKey, string> = {
 	'settings.default-mode.desc': 'Anzeigesprache einer Notiz beim Öffnen.',
 	'settings.live-preview': 'In der Live-Vorschau übersetzen',
 	'settings.live-preview.desc': 'Übersetzungen auch im Editor anzeigen, nicht nur in der Leseansicht. Tabellen und Callouts werden in der Leseansicht übersetzt.',
+	'settings.animate': 'Übersetzungen animieren',
+	'settings.animate.desc': 'Buchstaben wirbeln kurz durcheinander und werden zur Übersetzung, wenn sie erscheint. Aus, wenn dein System reduzierte Bewegung verlangt.',
 	'settings.status-bar': 'Statusleisten-Element anzeigen',
 	'settings.status-bar.desc': 'Zeigt OG / EN / DE für die aktive Notiz.',
 

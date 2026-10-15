@@ -28,6 +28,12 @@ export interface ComposeOptions {
 	 * can style them. Leave undefined for plain text output (clipboard, editor).
 	 */
 	markerClassPrefix?: string;
+	/**
+	 * Wrap translated sentences in `<span class="tt-s" data-tt="<hash>">` so the
+	 * reading view can animate them. Sentences containing `^` (block ids,
+	 * footnotes) are not wrapped, because the span would break that syntax.
+	 */
+	wrapTranslated?: boolean;
 }
 
 /**
@@ -52,7 +58,7 @@ export function composeRange(
 		const d = display(sentence);
 		switch (d.kind) {
 			case 'translated':
-				result.text += d.text;
+				result.text += opts.wrapTranslated && !d.text.includes('^') ? `<span class="tt-s" data-tt="${sentence.hash}">${d.text}</span>` : d.text;
 				result.translated++;
 				break;
 			case 'same':

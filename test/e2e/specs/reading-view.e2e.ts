@@ -89,6 +89,21 @@ describe('Reading view', function () {
 		expect(germanRequests.sort()).toEqual(['Big O', 'Loops multiply the cost, d. h. eine Schleife mit ⟦1⟧ Durchläufen kostet ⟦2⟧ Schritte.', 'We count steps, not seconds!']);
 	});
 
+	it('plays the decode animation and settles on the exact translation', async function () {
+		await freshVault();
+		await configure({ animateTranslations: true });
+		await openNote('Edit.md', 'preview');
+		await command('show-english');
+		await browser.waitUntil(async () => browser.execute(() => document.querySelectorAll('.tt-decoding').length > 0), {
+			interval: 20,
+			timeoutMsg: 'decode animation did not start',
+		});
+		await browser.waitUntil(async () => browser.execute(() => document.querySelectorAll('.tt-decoding').length === 0), { timeoutMsg: 'animation did not finish' });
+		expect(await readingText()).toContain('This is the first sentence. Here is a second sentence.');
+		expect(await readingText()).toContain('An item in the list.');
+		await configure();
+	});
+
 	it('keeps excluded folders untranslated', async function () {
 		await configure({ excludedFolders: 'Private' });
 		await openNote('Private/Tagebuch.md', 'preview');

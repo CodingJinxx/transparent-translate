@@ -3,6 +3,7 @@ import { WidgetType, type EditorView } from '@codemirror/view';
 import type { TargetLanguage } from '../../core/types';
 import { t } from '../../i18n';
 import type { EditSession } from './state';
+import { decode } from '../decode-animation';
 
 const components = new WeakMap<HTMLElement, Component>();
 /** Removes the window key listener of an edit session widget. */
@@ -12,7 +13,7 @@ const keyListeners = new WeakMap<HTMLElement, () => void>();
  * Renders inline Markdown (links, bold, math) into `target`. A single
  * paragraph is unwrapped so the result flows inline with the editor line.
  */
-function renderInline(app: App, markdown: string, target: HTMLElement, sourcePath: string): void {
+function renderInline(app: App, markdown: string, target: HTMLElement, sourcePath: string, animate = false): void {
 	const component = new Component();
 	component.load();
 	components.set(target, component);
@@ -23,6 +24,7 @@ function renderInline(app: App, markdown: string, target: HTMLElement, sourcePat
 		const source = scratch.childElementCount === 1 && first?.tagName === 'P' ? first : scratch;
 		target.empty();
 		while (source.firstChild) target.appendChild(source.firstChild);
+		if (animate) decode(target);
 	});
 }
 
@@ -50,6 +52,7 @@ export class SentenceWidget extends WidgetType {
 		private readonly sourcePath: string,
 		private readonly handlers: SentenceWidgetHandlers,
 		private readonly readOnly: boolean,
+		private readonly animate = false,
 	) {
 		super();
 	}
@@ -61,7 +64,7 @@ export class SentenceWidget extends WidgetType {
 	toDOM(view: EditorView): HTMLElement {
 		const span = createSpan({ cls: 'tt-sentence', text: this.display, attr: { lang: this.lang } });
 		if (!this.readOnly) span.setAttr('title', t('widget.edit-hint'));
-		renderInline(this.app, this.display, span, this.sourcePath);
+		renderInline(this.app, this.display, span, this.sourcePath, this.animate);
 		span.addEventListener('mousedown', (event) => {
 			if (event.button !== 0) return;
 			const link = (event.target as HTMLElement | null)?.closest('a');

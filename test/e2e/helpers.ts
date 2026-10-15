@@ -35,6 +35,7 @@ export async function configure(extra: Partial<TransparentTranslateSettings> = {
 				model: 'mock-small',
 				defaultMode: 'original',
 				noteEditPreferences: {},
+				animateTranslations: false,
 				excludedFolders: '',
 				includeOnlyFolders: '',
 				...overrides,

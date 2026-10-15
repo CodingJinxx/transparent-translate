@@ -81,6 +81,15 @@ export class TransparentTranslateSettingTab extends PluginSettingTab {
 					await this.save(true);
 				}),
 			);
+		new Setting(el)
+			.setName(t('settings.animate'))
+			.setDesc(t('settings.animate.desc'))
+			.addToggle((toggle) =>
+				toggle.setValue(this.settings.animateTranslations).onChange(async (value) => {
+					this.settings.animateTranslations = value;
+					await this.save();
+				}),
+			);
 		if (!this.plugin.isMobile) {
 			new Setting(el)
 				.setName(t('settings.status-bar'))

@@ -18,6 +18,7 @@ import { registerCommands } from './commands';
 import { ConfirmModal } from './ui/confirm-modal';
 import { TransparentTranslateSettingTab } from './ui/settings-tab';
 import { ReadingViewController } from './views/reading-view';
+import { resetAnimations } from './views/decode-animation';
 import { createLivePreviewExtension, refreshEffect, setModeEffect } from './views/live-preview/extension';
 
 /** Obsidian's `requestUrl` avoids CORS and works on every platform. */
@@ -170,6 +171,7 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 		}
 		this.modes.set(leaf, path, mode);
 		this.service.clearFailures(path);
+		resetAnimations(path);
 
 		if (isTargetLanguage(mode)) {
 			if (this.service.canTranslate && !this.hasProvider()) new Notice(t('notice.no-provider'));

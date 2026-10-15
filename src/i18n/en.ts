@@ -117,6 +117,8 @@ export const en = {
 	'settings.default-mode.desc': 'Display language of a note when it is opened.',
 	'settings.live-preview': 'Translate in Live Preview',
 	'settings.live-preview.desc': 'Show translations in the editor, not only in Reading view. Tables and callouts are translated in Reading view.',
+	'settings.animate': 'Animate translations',
+	'settings.animate.desc': 'Letters scramble briefly and settle into the translation when it appears. Off when your system asks for reduced motion.',
 	'settings.status-bar': 'Show status bar item',
 	'settings.status-bar.desc': 'Shows OG / EN / DE for the active note.',
 
