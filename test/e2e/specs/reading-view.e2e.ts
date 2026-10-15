@@ -76,6 +76,19 @@ describe('Reading view', function () {
 		expect((await mockStats()).requests).toBe(before);
 	});
 
+	it('only requests English and mixed sentences when switching to German after English', async function () {
+		await freshVault();
+		await configure();
+		await openNote(NOTE, 'preview');
+		await command('show-english');
+		await browser.waitUntil(async () => (await readingText()).includes('Constants drop out'));
+		const afterEnglish = (await mockStats()).sentences.length;
+		await command('show-german');
+		await browser.waitUntil(async () => (await readingText()).includes('Wir zählen Schritte'));
+		const germanRequests = (await mockStats()).sentences.slice(afterEnglish);
+		expect(germanRequests.sort()).toEqual(['Big O', 'Loops multiply the cost, d. h. eine Schleife mit ⟦1⟧ Durchläufen kostet ⟦2⟧ Schritte.', 'We count steps, not seconds!']);
+	});
+
 	it('keeps excluded folders untranslated', async function () {
 		await configure({ excludedFolders: 'Private' });
 		await openNote('Private/Tagebuch.md', 'preview');

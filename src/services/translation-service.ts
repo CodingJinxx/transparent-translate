@@ -1,6 +1,7 @@
 import type { SentenceDisplay } from '../core/compose';
 import { placeholdersValid, restore } from '../core/protect';
 import { normalizeSentence } from '../core/text';
+import { detectLanguage } from '../core/language';
 import type { NoteModel, Sentence, TargetLanguage } from '../core/types';
 import type { Translator } from '../translator/translator';
 import { TranslatorError } from '../translator/translator';
@@ -90,6 +91,17 @@ export class TranslationService {
 		return masked;
 	}
 
+	/**
+	 * True if the sentence is known to be written in `target` already, so it
+	 * never needs a request: either the model reported its language earlier
+	 * (while translating it into the other language), or local detection is sure.
+	 */
+	private alreadyInTarget(notePath: string, sentence: Sentence, target: TargetLanguage): boolean {
+		const lang = this.deps.store.peek(notePath)?.sentences[sentence.hash]?.lang;
+		if (lang !== undefined) return lang === target;
+		return detectLanguage(sentence.masked) === target;
+	}
+
 	/** What a sentence should show in `target` mode right now. Synchronous. */
 	display(notePath: string, sentence: Sentence, target: TargetLanguage): SentenceDisplay {
 		if (!this.deps.store.isLoaded(notePath)) {
@@ -104,6 +116,7 @@ export class TranslationService {
 			if (normalizeSentence(masked) === normalizeSentence(sentence.masked)) return { kind: 'same' };
 			return { kind: 'translated', text: restore(masked, sentence.tokens) };
 		}
+		if (this.alreadyInTarget(notePath, sentence, target)) return { kind: 'same' };
 		if (this.inflight.get(key(notePath, target))?.has(sentence.hash)) return { kind: 'pending' };
 		if (this.failures.get(key(notePath, target))?.has(sentence.hash)) return { kind: 'failed' };
 		return { kind: 'missing' };
@@ -149,7 +162,7 @@ export class TranslationService {
 		const seen = new Set<string>();
 		for (const s of sentences) {
 			if (seen.has(s.hash) || inflight.has(s.hash) || failed?.has(s.hash)) continue;
-			if (this.cached(notePath, s, target) !== undefined) continue;
+			if (this.cached(notePath, s, target) !== undefined || this.alreadyInTarget(notePath, s, target)) continue;
 			seen.add(s.hash);
 			todo.push(s);
 		}
@@ -213,10 +226,15 @@ export class TranslationService {
 				const item = result.items[i];
 				if (item?.ok) {
 					const same = normalizeSentence(item.text) === normalizeSentence(s.masked);
+					const lang = item.lang ?? (same ? target : undefined);
+					// The original is the display text for its own language: no request needed later.
+					if (lang === 'en' || lang === 'de') {
+						if (lang !== target) this.deps.store.put(notePath, s.hash, lang, s.masked);
+					}
 					this.deps.store.put(notePath, s.hash, target, item.text, {
 						model: result.model,
 						translatedAt,
-						...(same ? { lang: target } : {}),
+						...(lang ? { lang } : {}),
 					});
 					outcome.translated++;
 				} else {

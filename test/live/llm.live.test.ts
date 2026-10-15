@@ -92,7 +92,8 @@ describe.skipIf(!details)('live LLM endpoint', () => {
 	it.each(['en', 'de'] as const)('translates the Lektion 1 fixture into %s with all syntax intact', async (target) => {
 		const source = fixture('lektion-1.md');
 		const { note, result, composed } = await translateNote(source, target);
-		console.log(`[live] ${target} usage`, result.usage, `failed=${composed.failed}`);
+		const langs = result.items.map((r) => (r.ok ? (r.lang ?? '?') : 'x')).join(' ');
+		console.log(`[live] ${target} usage`, result.usage, `failed=${composed.failed}`, `langs=${langs}`);
 		console.log(composed.text);
 
 		expect(composed.failed).toBe(0);

@@ -38,6 +38,12 @@ const DE: Record<string, string> = {
 
 /** Sentences that are already English and must come back unchanged in English mode. */
 const ALREADY_EN = new Set(['We count steps, not seconds!', 'Big O']);
+const MIXED = new Set(['Loops multiply the cost, d. h. eine Schleife mit ⟦1⟧ Durchläufen kostet ⟦2⟧ Schritte.']);
+
+/** Source language tag, like a well-behaved model reports it. */
+function sourceLang(text: string): string {
+	return ALREADY_EN.has(text) ? 'en' : MIXED.has(text) ? 'mixed' : 'de';
+}
 
 export function mockTranslate(text: string, target: 'en' | 'de'): string {
 	if (target === 'en') return EN[text] ?? (ALREADY_EN.has(text) ? text : `EN: ${text}`);
@@ -85,8 +91,8 @@ export function startMockLlm(port: number): Promise<Server> {
 			const lines = [...user.matchAll(/^<<(\d+)>> (.*)$/gm)];
 			stats.sentences.push(...lines.map((m) => m[2]!));
 			const content = request.response_format
-				? JSON.stringify({ translations: lines.map((m) => mockTranslate(m[2]!, target)) })
-				: lines.map((m) => `<<${m[1]}>> ${mockTranslate(m[2]!, target)}`).join('\n');
+				? JSON.stringify({ translations: lines.map((m) => ({ lang: sourceLang(m[2]!), text: mockTranslate(m[2]!, target) })) })
+				: lines.map((m) => `<<${m[1]}>> {${sourceLang(m[2]!)}} ${mockTranslate(m[2]!, target)}`).join('\n');
 			// A little latency, like a real endpoint, so pending states are visible.
 			await new Promise((resolve) => setTimeout(resolve, 150));
 			send(200, {

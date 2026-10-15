@@ -1,4 +1,5 @@
 import type { TargetLanguage } from '../core/types';
+import type { SourceLanguage } from '../core/language';
 
 export interface TranslationItem {
 	/** Sentence text with protected spans replaced by `⟦n⟧`. */
@@ -19,8 +20,10 @@ export interface TokenUsage {
 	outputTokens: number;
 }
 
-/** One result per input item: the masked translation, or an error message. */
-export type ItemResult = { ok: true; text: string } | { ok: false; error: string };
+/**
+ * One result per input item: the masked translation, or an error message.
+ * `lang` is the source language the model reported for the sentence, when it did. */
+export type ItemResult = { ok: true; text: string; lang?: SourceLanguage } | { ok: false; error: string };
 
 export interface TranslateResult {
 	items: ItemResult[];

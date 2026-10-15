@@ -4,7 +4,21 @@
  * mode is optional for providers that support `response_format`.
  */
 
-export type ParseResult = { ok: true; texts: string[] } | { ok: false; reason: string };
+import { isSourceLanguage, type SourceLanguage } from './language';
+
+/** `langs[i]` is the source language the model reported for sentence i, if any. */
+export type ParseResult = { ok: true; texts: string[]; langs: Array<SourceLanguage | undefined> } | { ok: false; reason: string };
+
+/** `{de}`, also `[de]` and `de:` from models that do not copy the braces. */
+const LANG_TAG = /^(?:\{\s*(en|de|mixed)\s*\}|\[\s*(en|de|mixed)\s*\]|(en|de|mixed):)\s*/i;
+
+/** Splits an optional `{de}` source-language tag off the front of a translation. */
+function splitLangTag(text: string): { text: string; lang: SourceLanguage | undefined } {
+	const m = LANG_TAG.exec(text);
+	if (!m) return { text, lang: undefined };
+	const lang = (m[1] ?? m[2] ?? m[3] ?? '').toLowerCase();
+	return { text: text.slice(m[0].length), lang: isSourceLanguage(lang) ? lang : undefined };
+}
 
 function stripCodeFence(output: string): string {
 	const trimmed = output.trim();
@@ -39,7 +53,8 @@ export function parseNumberedOutput(output: string, count: number): ParseResult 
 	}
 	const missing = texts.findIndex((t) => t === undefined);
 	if (missing !== -1) return { ok: false, reason: `missing marker <<${missing + 1}>>` };
-	return { ok: true, texts: texts.map((t) => t ?? '') };
+	const split = texts.map((t) => splitLangTag(t ?? ''));
+	return { ok: true, texts: split.map((s) => s.text), langs: split.map((s) => s.lang) };
 }
 
 export function parseJsonOutput(output: string, count: number): ParseResult {
@@ -57,6 +72,22 @@ export function parseJsonOutput(output: string, count: number): ParseResult {
 	}
 	if (!Array.isArray(list)) return { ok: false, reason: 'JSON output has no array' };
 	if (list.length !== count) return { ok: false, reason: `expected ${count} items, got ${list.length}` };
-	if (!list.every((x) => typeof x === 'string')) return { ok: false, reason: 'JSON array contains non-strings' };
-	return { ok: true, texts: list.map((x: unknown) => String(x).trim()) };
+	const texts: string[] = [];
+	const langs: Array<SourceLanguage | undefined> = [];
+	for (const item of list as unknown[]) {
+		// Items are strings, or objects {"lang": "de", "text": "..."}.
+		if (typeof item === 'string') {
+			const split = splitLangTag(item.trim());
+			texts.push(split.text);
+			langs.push(split.lang);
+		} else if (typeof item === 'object' && item !== null && typeof (item as { text?: unknown }).text === 'string') {
+			const obj = item as { text: string; lang?: unknown };
+			texts.push(obj.text.trim());
+			const lang = typeof obj.lang === 'string' ? obj.lang.toLowerCase() : undefined;
+			langs.push(isSourceLanguage(lang) ? lang : undefined);
+		} else {
+			return { ok: false, reason: 'JSON array contains non-strings' };
+		}
+	}
+	return { ok: true, texts, langs };
 }

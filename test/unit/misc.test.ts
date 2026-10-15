@@ -17,7 +17,7 @@ describe('prompt', () => {
 			{ noteTitle: 'Woche 1', glossary: ['Karel', 'BlueJ'], context: ['Vorheriger Satz.'], jsonMode: false },
 		);
 		expect(system!.content).toContain('into English');
-		expect(system!.content).toContain('<<n>>');
+		expect(system!.content).toContain('<<1>> {de} Good morning.');
 		expect(user!.content).toContain('<<1>> Hallo ⟦1⟧.\n<<2>> Zweiter Satz.');
 		expect(user!.content).toContain('Karel, BlueJ');
 		expect(user!.content).toContain('Note title: Woche 1');

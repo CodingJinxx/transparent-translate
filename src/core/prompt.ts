@@ -29,8 +29,18 @@ export const LANGUAGE_NAMES: Record<TargetLanguage, string> = {
 export function systemPrompt(target: TargetLanguage, jsonMode: boolean): string {
 	const language = LANGUAGE_NAMES[target];
 	const output = jsonMode
-		? `Return a JSON object {"translations": [...]} whose array holds exactly one string per input sentence, in input order.`
-		: `Return exactly one line per input sentence in the form "<<n>> translated text", using the same numbers as the input, in order. Output nothing else: no preamble, no notes, no code fences.`;
+		? [
+				'Return a JSON object {"translations": [...]} whose array holds exactly one object per input sentence, in input order.',
+				'Each object is {"lang": "<language of the INPUT sentence: en, de or mixed>", "text": "<translation>"}.',
+				'Example: {"translations": [{"lang": "de", "text": "Good morning."}, {"lang": "en", "text": "See you."}]}',
+			].join('\n')
+		: [
+				'Return exactly one line per input sentence: the marker, the language of the INPUT sentence in curly braces ({en}, {de} or {mixed}), then the translation.',
+				'Use the same numbers as the input, in order. Output nothing else: no preamble, no notes, no code fences.',
+				'Example for the input "<<1>> Guten Morgen." and "<<2>> See you.":',
+				'<<1>> {de} Good morning.',
+				'<<2>> {en} See you.',
+			].join('\n');
 	return [
 		`You are a translation engine for personal Markdown notes. Translate each numbered sentence into ${language}.`,
 		'Rules:',

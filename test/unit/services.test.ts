@@ -190,6 +190,38 @@ describe('TranslationService', () => {
 		expect(service.display('n.md', note.sentences[0]!, 'en')).toEqual({ kind: 'missing' });
 	});
 
+	it('never requests sentences that are clearly in the target language already', async () => {
+		const { service, translator } = setup();
+		const note = parseNote('This is the first sentence of the note. Das ist der zweite Satz.');
+		await service.translate('n.md', note, note.sentences, 'en', 'n');
+		expect(translator!.calls[0]!.map((i) => i.masked)).toEqual(['Das ist der zweite Satz.']);
+		expect(service.display('n.md', note.sentences[0]!, 'en')).toEqual({ kind: 'same' });
+	});
+
+	it('uses the language the model reported to skip the other direction', async () => {
+		const backend = new MemoryBackend();
+		const store = new CacheStore(backend, { cacheFolder: () => '_Translations', saveDelayMs: 0 });
+		const calls: string[][] = [];
+		const translator: Translator = {
+			async translate(items, target) {
+				calls.push(items.map((i) => `${target}:${i.masked}`));
+				return {
+					items: items.map((i) => ({ ok: true as const, text: `[${target}] ${i.masked}`, lang: 'de' as const })),
+					usage: { inputTokens: 0, outputTokens: 0 },
+					model: 'fake',
+				};
+			},
+		};
+		const service = new TranslationService({ store, translator: () => translator, batchSize: () => 40, concurrency: () => 1, glossary: () => [], onError: () => {} });
+		// Too short for local detection: only the model knows it is German.
+		const note = parseNote('Kurzer Satz.');
+		await service.translate('n.md', note, note.sentences, 'en', 'n');
+		expect(service.display('n.md', note.sentences[0]!, 'en')).toEqual({ kind: 'translated', text: '[en] Kurzer Satz.' });
+		await service.translate('n.md', note, note.sentences, 'de', 'n');
+		expect(calls).toEqual([['en:Kurzer Satz.']]);
+		expect(service.display('n.md', note.sentences[0]!, 'de')).toEqual({ kind: 'same' });
+	});
+
 	it('retranslate drops cached entries', async () => {
 		const { service, translator } = setup();
 		const note = parseNote('Hallo Welt.');

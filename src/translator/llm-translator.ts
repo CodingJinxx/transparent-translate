@@ -142,12 +142,14 @@ export class LlmTranslator implements Translator {
 
 			// Second pass: only the sentences whose placeholders did not survive.
 			const retry: number[] = [];
+			const langs = parsed.langs;
 			parsed.texts.forEach((raw, k) => {
 				const index = pending[k]!;
 				const item = items[index]!;
 				const text = tidyPlaceholders(raw);
 				if (text.length > 0 && placeholdersValid(text, item.placeholderCount)) {
-					results[index] = { ok: true, text };
+					const lang = langs[k];
+					results[index] = lang ? { ok: true, text, lang } : { ok: true, text };
 				} else {
 					results[index] = { ok: false, error: 'Placeholders were changed by the model' };
 					retry.push(index);
