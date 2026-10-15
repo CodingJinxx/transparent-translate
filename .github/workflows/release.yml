@@ -49,7 +49,7 @@ jobs:
         run: |
           tag="${GITHUB_REF#refs/tags/}"
           awk -v v="$tag" '
-            $0 ~ "^## \\[?" v "\\]?" { found = 1; next }
+            $0 ~ "^## [[]?" v "[]]?( |$)" { found = 1; next }
             found && /^## / { exit }
             found { print }
           ' CHANGELOG.md > release-notes.md
