@@ -1,0 +1,28 @@
+# dependencies
+node_modules/
+
+# build output (attached to GitHub releases, never committed)
+main.js
+*.js.map
+
+# test output
+coverage/
+.wdio-vaults/
+.obsidian-cache/
+test/e2e/screenshots/*.png
+!docs/images/*.png
+
+# editors and OS
+.vscode/
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+# local Obsidian data when the repo itself is opened as a vault
+data.json
+.obsidian/
+_Translations/
+
+
+.llm_connection_details.json

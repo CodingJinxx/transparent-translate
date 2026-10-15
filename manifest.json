@@ -1,0 +1,10 @@
+{
+	"id": "transparent-translate",
+	"name": "Transparent Translate",
+	"version": "0.1.0",
+	"minAppVersion": "1.11.4",
+	"description": "Switch a note's display between the original text, English and German using any OpenAI-compatible LLM. The file on disk never changes.",
+	"author": "Jay Leimer",
+	"authorUrl": "https://github.com/CodingJinxx",
+	"isDesktopOnly": false
+}

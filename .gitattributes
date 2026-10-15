@@ -1,0 +1,4 @@
+* text=auto eol=lf
+
+# Fixtures are byte-exact copies of notes (some deliberately use CRLF).
+test/fixtures/** -text

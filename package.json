@@ -1,0 +1,53 @@
+{
+	"name": "transparent-translate",
+	"version": "0.1.0",
+	"description": "Switch the display of a note between Original, English and German without ever changing the file on disk.",
+	"main": "main.js",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"dev": "node esbuild.config.mjs",
+		"build": "tsc --noEmit && node esbuild.config.mjs production",
+		"typecheck": "tsc --noEmit",
+		"lint": "eslint .",
+		"lint:fix": "eslint . --fix",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:coverage": "vitest run --coverage",
+		"check:guidelines": "node scripts/check-guidelines.mjs",
+		"check": "npm run typecheck && npm run lint && npm run check:guidelines && npm run test",
+		"version": "node version-bump.mjs && git add manifest.json versions.json",
+		"test:live": "vitest run --config vitest.live.config.ts"
+	},
+	"keywords": [
+		"obsidian",
+		"obsidian-plugin",
+		"translation",
+		"llm",
+		"openai-compatible"
+	],
+	"author": "Jay Leimer",
+	"license": "MIT",
+	"engines": {
+		"node": ">=22.12.0"
+	},
+	"devDependencies": {
+		"@codemirror/state": "^6.5.0",
+		"@codemirror/view": "^6.38.6",
+		"@eslint/js": "^9.39.5",
+		"@types/node": "^22.20.5",
+		"@vitest/coverage-v8": "^5.0.4",
+		"esbuild": "^0.28.2",
+		"eslint": "^9.39.5",
+		"eslint-plugin-obsidianmd": "^0.4.2",
+		"globals": "^17.13.0",
+		"jiti": "^2.7.0",
+		"obsidian": "1.11.4",
+		"typescript": "~5.9.3",
+		"typescript-eslint": "^8.71.2",
+		"vitest": "^5.0.4"
+	},
+	"allowScripts": {
+		"esbuild": true
+	}
+}
