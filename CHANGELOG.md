@@ -4,6 +4,12 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-10-15
+
+### Fixed
+
+- Live Preview: a sentence that starts with bold text (`**Folien:** …`), for example the second line of a paragraph or a bullet, could be shown as an empty line or empty bullet in a translated mode. Obsidian hides the `**` markers with its own decorations, which swallowed the start of the translation. Translations now take precedence. The translation itself was always correct.
+
 ## [0.2.1] - 2026-10-15
 
 ### Changed
@@ -56,7 +62,8 @@ First release.
 - View-only mode on mobile (no requests, no key).
 - English and German interface.
 
-[Unreleased]: https://github.com/CodingJinxx/transparent-translate/compare/0.2.1...HEAD
+[Unreleased]: https://github.com/CodingJinxx/transparent-translate/compare/0.2.2...HEAD
+[0.2.2]: https://github.com/CodingJinxx/transparent-translate/compare/0.2.1...0.2.2
 [0.2.1]: https://github.com/CodingJinxx/transparent-translate/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/CodingJinxx/transparent-translate/compare/0.1.1...0.2.0
 [0.1.1]: https://github.com/CodingJinxx/transparent-translate/compare/0.1.0...0.1.1

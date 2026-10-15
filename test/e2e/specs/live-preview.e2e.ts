@@ -165,4 +165,17 @@ describe('Live Preview', function () {
 		expect(await readFile(NOTE)).toBe(ORIGINAL);
 		await configure();
 	});
+
+	it('shows sentences that start with bold text, also on following lines and in bullets', async function () {
+		// Obsidian hides the ** markers with its own replace decorations at the start of such a sentence.
+		const text = ['**Termin:** Mi um acht Uhr.', '**Folien:** Kapitel null.', '', '- **Vorlesung:** Mi um acht Uhr.', '- **Übung:** Do um neun Uhr.', ''].join('\n');
+		await browser.executeObsidian(async ({ app }, content) => {
+			await app.vault.create('Bold.md', content);
+		}, text);
+		await openNote('Bold.md', 'live');
+		await command('show-english');
+		await browser.waitUntil(async () => (await widgetTexts()).length === 4, { timeoutMsg: 'not every sentence was shown' });
+		expect(await widgetTexts()).toEqual(['EN: Termin: Mi um acht Uhr.', 'EN: Folien: Kapitel null.', 'EN: Vorlesung: Mi um acht Uhr.', 'EN: Übung: Do um neun Uhr.']);
+		expect(await readFile('Bold.md')).toBe(text);
+	});
 });

@@ -1,5 +1,5 @@
 import { editorInfoField, editorLivePreviewField, Keymap, MarkdownView, Menu, Notice } from 'obsidian';
-import { EditorState, StateField, type Extension, type Range, type Transaction } from '@codemirror/state';
+import { EditorState, Prec, StateField, type Extension, type Range, type Transaction } from '@codemirror/state';
 import { Decoration, EditorView, ViewPlugin, type DecorationSet, type ViewUpdate } from '@codemirror/view';
 import { composeRange } from '../../core/compose';
 import { isTargetLanguage, type DisplayMode, type TargetLanguage } from '../../core/types';
@@ -216,7 +216,9 @@ export function createLivePreviewExtension(host: TranslateHost): Extension {
 			if (!changed) return value;
 			return compute(tr.state, { mode, typed, session, animateUntil, leaving });
 		},
-		provide: (f) => [EditorView.decorations.from(f, (v) => v.decorations), EditorView.atomicRanges.of((view) => view.state.field(f, false)?.atomic ?? Decoration.none)],
+		// Highest precedence: Obsidian hides `**` and other markers with its own replace decorations, which start where
+		// a sentence starts. If they came first, they would swallow the start of our widget and the sentence would vanish.
+		provide: (f) => [Prec.highest(EditorView.decorations.from(f, (v) => v.decorations)), EditorView.atomicRanges.of((view) => view.state.field(f, false)?.atomic ?? Decoration.none)],
 	});
 
 	// ---- Edit sessions ----------------------------------------------------
