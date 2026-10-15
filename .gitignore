@@ -26,3 +26,5 @@ _Translations/
 
 
 .llm_connection_details.json
+# browser tool output
+.playwright-mcp/
