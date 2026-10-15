@@ -150,6 +150,8 @@ export class CorrectionModal extends Modal {
 		});
 		this.close();
 		glossaryNotice(this.plugin, t('correction.saved', { term }));
+		// Update now, whatever the auto-update setting says: the user asked for this correction.
+		void this.plugin.updateAffected(this.request.path, target);
 	}
 
 	override onClose(): void {

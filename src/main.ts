@@ -239,9 +239,24 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 		if (this.glossaryTimer !== null) return;
 		this.glossaryTimer = window.setTimeout(() => {
 			this.glossaryTimer = null;
+			// A sentence whose earlier update failed must be tried again with the new entries.
+			this.service.clearFailures();
 			for (const view of this.editorViews) view.dispatch({ effects: refreshEffect.of(null) });
 			this.reading.refreshAll();
 		}, 100);
+	}
+
+	/**
+	 * Translates the sentences of a note whose glossary entries changed, now, and says so when some could
+	 * not be updated. Used after the user changed the glossary on purpose (a correction, a review).
+	 */
+	async updateAffected(path: string, target: TargetLanguage): Promise<void> {
+		const view = this.findMarkdownView(path);
+		if (!view || !this.service.canTranslate) return;
+		const note = this.parse(path, view.getViewData());
+		this.service.clearFailures(path);
+		const outcome = await this.service.translate(path, note, note.sentences, target, this.noteTitle(path), undefined, true);
+		if (outcome.failed > 0) new Notice(t('notice.update-failed', { count: outcome.failed }), 10_000);
 	}
 
 	fixTranslation(path: string, sentenceHash: string, target: TargetLanguage): void {

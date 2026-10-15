@@ -221,6 +221,7 @@ export function registerCommands(plugin: TransparentTranslatePlugin): void {
 			const note = plugin.parse(current.path, current.view.getViewData());
 			void plugin.glossary.load().then(async () => {
 				new Notice(t('notice.updating-outdated'));
+				plugin.service.clearFailures(current.path);
 				const outcome = await plugin.service.translate(current.path, note, note.sentences, current.mode, plugin.noteTitle(current.path), undefined, true);
 				new Notice(outcome.translated + outcome.failed === 0 ? t('notice.nothing-outdated') : t('notice.updated-outdated', { count: outcome.translated }));
 			});

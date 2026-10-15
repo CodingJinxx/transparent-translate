@@ -4,6 +4,12 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-10-15
+
+### Fixed
+
+- After **Fix translation** (or a term review), the affected sentences are updated right away and a notice says if some could not be updated. Before, a sentence whose earlier update had failed (for example because the model changed a link) kept its old translation silently until the cache was cleared. Glossary changes now also clear earlier failures, so those sentences are tried again.
+
 ## [0.4.0] - 2026-10-15
 
 ### Added
@@ -83,7 +89,8 @@ First release.
 - View-only mode on mobile (no requests, no key).
 - English and German interface.
 
-[Unreleased]: https://github.com/CodingJinxx/transparent-translate/compare/0.4.0...HEAD
+[Unreleased]: https://github.com/CodingJinxx/transparent-translate/compare/0.4.1...HEAD
+[0.4.1]: https://github.com/CodingJinxx/transparent-translate/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/CodingJinxx/transparent-translate/compare/0.3.0...0.4.0
 [0.3.0]: https://github.com/CodingJinxx/transparent-translate/compare/0.2.2...0.3.0
 [0.2.2]: https://github.com/CodingJinxx/transparent-translate/compare/0.2.1...0.2.2

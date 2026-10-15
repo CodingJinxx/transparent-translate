@@ -323,6 +323,7 @@ export const en = {
 	'settings.guide.button': 'Open user guide',
 	'notice.endpoint-unreachable': 'Translation is not available: the translation endpoint cannot be reached, and this note has no translation yet. Check Settings → Transparent Translate.',
 	'notice.endpoint-unreachable-short': 'The translation endpoint cannot be reached. Check Settings → Transparent Translate.',
+	'notice.update-failed': '{count} sentences could not be updated (the model did not return a usable translation). Run "Update translations affected by glossary changes" to try again.',
 } as const;
 
 export type StringKey = keyof typeof en;

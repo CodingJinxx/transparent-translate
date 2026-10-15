@@ -450,6 +450,53 @@ describe('outdated translations', () => {
 	});
 });
 
+describe('after a failed update', () => {
+	it('tries again once failures are cleared (a glossary change does that)', async () => {
+		const backend = new MemoryBackend();
+		const cache = new CacheStore(backend, { cacheFolder: () => '_Translations', saveDelayMs: 0 });
+		const glossary = new GlossaryStore(backend, { path: () => 'Translation glossary.md', saveDelayMs: 0 });
+		const note = parseNote('Der Schein ist wichtig für alle.\n');
+		const sentence = note.sentences[0]!;
+		let attempts = 0;
+		const flaky: Translator = {
+			async translate(items) {
+				attempts++;
+				return {
+					items: items.map((i) => (attempts === 1 ? { ok: false as const, error: 'Placeholders were changed by the model' } : { ok: true as const, text: `EN ${i.masked}`, lang: 'de' as const })),
+					usage: { inputTokens: 1, outputTokens: 1 },
+					model: 'fake',
+				};
+			},
+		};
+		const service = new TranslationService({
+			store: cache,
+			translator: () => flaky,
+			batchSize: () => 40,
+			concurrency: () => 1,
+			glossary: () => [],
+			onError: () => undefined,
+			terms: (path, target) => createResolver(glossary.data, { ...ctx, path }, target),
+		});
+		await glossary.load();
+		await cache.load('a.md');
+		cache.put('a.md', sentence.hash, 'en', 'Old translation', { lang: 'de' });
+		glossary.upsert({ kind: 'map', src: 'Schein', target: 'en', to: 'course credit', scope: {} });
+
+		const first = await service.translate('a.md', note, note.sentences, 'en', 'a');
+		expect(first.failed).toBe(1);
+		// The old text stays, and nothing is retried on its own.
+		expect(service.display('a.md', sentence, 'en')).toMatchObject({ kind: 'translated', text: 'Old translation' });
+		expect((await service.translate('a.md', note, note.sentences, 'en', 'a')).translated).toBe(0);
+		expect(attempts).toBe(1);
+
+		service.clearFailures('a.md');
+		expect(service.display('a.md', sentence, 'en')).toMatchObject({ kind: 'translated', outdated: true });
+		const second = await service.translate('a.md', note, note.sentences, 'en', 'a');
+		expect(second.translated).toBe(1);
+		expect(service.display('a.md', sentence, 'en')).toMatchObject({ kind: 'translated', text: 'EN Der Schein ist wichtig für alle.' });
+	});
+});
+
 describe('term review', () => {
 	const sources = ['Die Scheinkriterien stehen auf Folie 12.', 'Anmeldung über CampusPortal ist Pflicht.'];
 

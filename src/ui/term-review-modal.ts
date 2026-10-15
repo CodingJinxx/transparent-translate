@@ -94,7 +94,10 @@ export class TermReviewModal extends Modal {
 		});
 		this.close();
 		if (count === 0) new Notice(t('review.nothing'));
-		else glossaryNotice(this.plugin, t('review.applied', { count }));
+		else {
+			glossaryNotice(this.plugin, t('review.applied', { count }));
+			void this.plugin.updateAffected(this.path, target);
+		}
 	}
 
 	override onClose(): void {

@@ -305,4 +305,5 @@ export const de: Record<StringKey, string> = {
 	'settings.guide.button': 'Benutzeranleitung öffnen',
 	'notice.endpoint-unreachable': 'Übersetzen ist nicht verfügbar: Der Übersetzungsendpunkt ist nicht erreichbar, und diese Notiz hat noch keine Übersetzung. Prüfe Einstellungen → Transparent Translate.',
 	'notice.endpoint-unreachable-short': 'Der Übersetzungsendpunkt ist nicht erreichbar. Prüfe Einstellungen → Transparent Translate.',
+	'notice.update-failed': '{count} Sätze konnten nicht aktualisiert werden (das Modell lieferte keine brauchbare Übersetzung). Führe „Von Glossaränderungen betroffene Übersetzungen aktualisieren“ aus, um es erneut zu versuchen.',
 };
