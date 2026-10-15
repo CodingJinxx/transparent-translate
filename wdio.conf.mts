@@ -27,7 +27,8 @@ export const config: WebdriverIO.Config = {
 	runner: 'local',
 	framework: 'mocha',
 	specs: ['./test/e2e/specs/**/*.e2e.ts'],
-	exclude: [screenshots],
+	// Screenshots only run when asked for explicitly (npm run screenshots).
+	exclude: process.argv.some((a) => a.includes('screenshots')) ? [] : [screenshots],
 	// One instance at a time: all instances share one mock server and its request counters.
 	maxInstances: Number(env.WDIO_MAX_INSTANCES || 1),
 

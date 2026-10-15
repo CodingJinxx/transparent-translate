@@ -1,0 +1,20 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      dev-dependencies:
+        dependency-type: development
+        update-types: [minor, patch]
+    ignore:
+      # Pinned to the plugin's minAppVersion on purpose: newer typings would
+      # allow APIs that 1.11.4 does not have.
+      - dependency-name: obsidian
+      # Must match the versions Obsidian bundles.
+      - dependency-name: '@codemirror/*'
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

@@ -1,0 +1,67 @@
+name: Release
+
+# Push a tag that equals the version in manifest.json (no leading "v"), e.g.:
+#   npm version 0.2.0 && git push --follow-tags
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24.x
+          cache: npm
+
+      - name: Verify tag matches manifest.json and versions.json
+        run: |
+          tag="${GITHUB_REF#refs/tags/}"
+          manifest=$(node -p "require('./manifest.json').version")
+          min=$(node -p "require('./manifest.json').minAppVersion")
+          mapped=$(node -p "require('./versions.json')['$tag'] ?? ''")
+          if [ "$tag" != "$manifest" ]; then echo "::error::Tag $tag does not match manifest.json version $manifest"; exit 1; fi
+          if [ "$mapped" != "$min" ]; then echo "::error::versions.json does not map $tag to minAppVersion $min"; exit 1; fi
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run check:guidelines
+      - run: npm test
+      - run: npm run build
+
+      - name: Attest build provenance
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            main.js
+            styles.css
+
+      - name: Release notes from CHANGELOG.md
+        run: |
+          tag="${GITHUB_REF#refs/tags/}"
+          awk -v v="$tag" '
+            $0 ~ "^## \\[?" v "\\]?" { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+          [ -s release-notes.md ] || echo "See CHANGELOG.md." > release-notes.md
+
+      - name: Create draft release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${GITHUB_REF#refs/tags/}"
+          gh release create "$tag" \
+            --title "$tag" \
+            --notes-file release-notes.md \
+            --draft \
+            main.js manifest.json styles.css

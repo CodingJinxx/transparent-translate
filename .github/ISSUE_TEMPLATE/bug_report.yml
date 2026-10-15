@@ -1,0 +1,44 @@
+name: Bug report
+description: Something does not work as described.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Please do **not** paste API keys or private note content.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: sample
+    attributes:
+      label: Sample Markdown
+      description: A small, non-private snippet that reproduces the problem.
+      render: markdown
+  - type: dropdown
+    id: view
+    attributes:
+      label: View
+      options: [Reading view, Live Preview, Source mode, Settings, Other]
+  - type: input
+    id: provider
+    attributes:
+      label: Provider and model
+      placeholder: e.g. LM Studio with qwen2.5-7b-instruct
+  - type: input
+    id: versions
+    attributes:
+      label: Plugin version, Obsidian version, OS
+      placeholder: 0.1.0, Obsidian 1.14.4, Windows 11
+    validations:
+      required: true
+  - type: textarea
+    id: console
+    attributes:
+      label: Console output
+      description: Turn on "Debug logging" in the plugin settings, reproduce, and copy lines starting with [transparent-translate] from the developer console (Ctrl/Cmd+Shift+I).
+      render: text
