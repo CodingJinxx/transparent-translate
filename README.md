@@ -200,6 +200,10 @@ npm run demo         # record the demo GIF (needs ffmpeg), see docs/showcase.md
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the project layout, the test setup and the release process.
 
+## Support
+
+Transparent Translate is free and open source. If it saves you time, you can [buy me a coffee](https://buymeacoffee.com/codingjinxx). Thank you!
+
 ## Acknowledgements
 
 Built on the official [Obsidian sample plugin](https://github.com/obsidianmd/obsidian-sample-plugin) template and API. End-to-end tests use [wdio-obsidian-service](https://github.com/jesse-r-s-hines/wdio-obsidian-service). No third-party code is bundled into the plugin. The website's background music was made with [Strudel](https://strudel.cc).

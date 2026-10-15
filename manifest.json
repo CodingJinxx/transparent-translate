@@ -6,5 +6,6 @@
 	"description": "Switch a note's display between the original text, English and German using any OpenAI-compatible LLM. The file on disk never changes.",
 	"author": "Jay Leimer",
 	"authorUrl": "https://github.com/CodingJinxx",
+	"fundingUrl": "https://buymeacoffee.com/codingjinxx",
 	"isDesktopOnly": false
 }
