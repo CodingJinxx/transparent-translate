@@ -2,8 +2,8 @@ import type { Sentence } from './types';
 
 /** How one sentence should be displayed. */
 export type SentenceDisplay =
-	/** Show this text instead of the original. */
-	| { kind: 'translated'; text: string }
+	/** Show this text instead of the original. `outdated`: the glossary changed since, a new translation is requested. */
+	| { kind: 'translated'; text: string; outdated?: boolean }
 	/** The translation equals the original (sentence already in the target language). */
 	| { kind: 'same' }
 	/** Translation requested but not available yet. */
@@ -36,6 +36,8 @@ export interface ComposeOptions {
 	 * footnotes) are not wrapped, because the span would break that syntax.
 	 */
 	wrapTranslated?: boolean;
+	/** Also wrap sentences that are shown unchanged (they animate too). */
+	wrapSame?: boolean;
 }
 
 /**
@@ -60,12 +62,12 @@ export function composeRange(
 		const d = display(sentence);
 		switch (d.kind) {
 			case 'translated':
-				result.text += opts.wrapTranslated && !d.text.includes('^') ? `<span class="tt-s" data-tt="${sentence.hash}">${d.text}</span>` : d.text;
+				result.text += opts.wrapTranslated && !d.text.includes('^') ? `<span class="tt-s tt-t" data-tt="${sentence.hash}">${d.text}</span>` : d.text;
 				result.translated++;
 				break;
 			case 'same':
 				result.same++;
-				result.text += opts.wrapTranslated && !sentence.text.includes('^') ? `<span class="tt-s" data-tt="${sentence.hash}">${sentence.text}</span>` : sentence.text;
+				result.text += opts.wrapSame && !sentence.text.includes('^') ? `<span class="tt-s" data-tt="${sentence.hash}">${sentence.text}</span>` : sentence.text;
 				break;
 			default:
 				result[d.kind]++;

@@ -1,5 +1,6 @@
-import { editorInfoField, getLanguage, MarkdownView, Notice, Platform, Plugin, requestUrl, setIcon, TFile, type WorkspaceLeaf } from 'obsidian';
+import { editorInfoField, getAllTags, getLanguage, MarkdownView, normalizePath, Notice, Platform, Plugin, requestUrl, setIcon, TFile, type WorkspaceLeaf } from 'obsidian';
 import type { EditorView } from '@codemirror/view';
+import { createResolver, type NoteContext, type TermResolver } from './core/glossary-match';
 import { NoteParser, parseNote } from './core/note';
 import { namesPath } from './core/names-format';
 import { isTranslatablePath, notePathForCache } from './core/paths';
@@ -12,6 +13,7 @@ import { log, setDebug } from './log';
 import { ModeManager } from './modes';
 import { VaultCacheBackend } from './obsidian/vault-backend';
 import { CacheStore } from './services/cache-store';
+import { GlossaryStore } from './services/glossary-store';
 import { NameService } from './services/name-service';
 import { NameStore } from './services/name-store';
 import { TranslationService } from './services/translation-service';
@@ -19,6 +21,7 @@ import { DerivedSettings, mergeSettings, type TransparentTranslateSettings } fro
 import { LlmTranslator, parseExtraBody, parseHeaderLines, type HttpClient, type LlmConfig } from './translator/llm-translator';
 import { registerCommands } from './commands';
 import { ConfirmModal } from './ui/confirm-modal';
+import { CorrectionModal } from './ui/correction-modal';
 import { TransparentTranslateSettingTab } from './ui/settings-tab';
 import { NameDisplayController } from './views/name-display';
 import { ReadingViewController } from './views/reading-view';
@@ -38,6 +41,7 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 	service!: TranslationService;
 	nameStore!: NameStore;
 	names!: NameService;
+	glossary!: GlossaryStore;
 	translator: LlmTranslator | null = null;
 	readonly isMobile = Platform.isMobile;
 
@@ -48,6 +52,9 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 	private readonly editorViews = new Set<EditorView>();
 	private readonly headerActions = new WeakMap<MarkdownView, HTMLElement>();
 	private readonly refreshTimers = new Map<string, number>();
+	private readonly resolvers = new Map<string, TermResolver | null>();
+	private resolverEpoch = -1;
+	private glossaryTimer: number | null = null;
 	private statusBarEl: HTMLElement | null = null;
 	private lastErrorNotice = { message: '', at: 0 };
 
@@ -61,6 +68,7 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 		});
 		// Mobile is view-only: no translator, so no requests and no API key.
 		if (!this.isMobile) this.translator = new LlmTranslator(() => this.llmConfig(), obsidianHttp);
+		this.glossary = new GlossaryStore(new VaultCacheBackend(this.app), { path: () => this.settings.glossaryFile, saveDelayMs: 800 });
 		this.service = new TranslationService({
 			store: this.store,
 			translator: () => this.translator,
@@ -68,6 +76,8 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 			concurrency: () => this.settings.concurrency,
 			glossary: () => this.derived.glossary,
 			onError: (error) => this.reportError(error),
+			terms: (path, target) => this.termsFor(path, target),
+			autoUpdate: () => this.settings.glossaryAutoUpdate,
 		});
 		this.service.onUpdate((path) => this.scheduleRefresh(path));
 		this.nameStore = new NameStore(new VaultCacheBackend(this.app), {
@@ -93,7 +103,10 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 		this.nameDisplay.start();
 
 		if (this.settings.statusBar) this.createStatusBar();
+		this.glossary.onChange(() => this.scheduleGlossaryRefresh());
+		this.registerEvent(this.app.metadataCache.on('changed', () => this.resolvers.clear()));
 		this.app.workspace.onLayoutReady(() => {
+			void this.glossary.load();
 			this.refreshHeaderActions();
 			this.updateStatusBar();
 		});
@@ -121,6 +134,8 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 		this.names.cancelAll();
 		void this.store.flush();
 		void this.nameStore.flush();
+		void this.glossary.flush();
+		if (this.glossaryTimer !== null) window.clearTimeout(this.glossaryTimer);
 		for (const timer of this.refreshTimers.values()) window.clearTimeout(timer);
 	}
 
@@ -179,7 +194,63 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 	// ---- TranslateHost --------------------------------------------------
 
 	isTranslatable(path: string): boolean {
+		// The glossary is the user's own data, never translated.
+		if (path === normalizePath(this.settings.glossaryFile)) return false;
 		return isTranslatablePath(path, this.derived.folderRules);
+	}
+
+	// ---- Glossary -------------------------------------------------------
+
+	/** What the glossary needs to know about a note: its path, frontmatter properties and tags. */
+	noteContext(path: string): NoteContext {
+		const file = this.app.vault.getFileByPath(path);
+		const cache = file ? this.app.metadataCache.getFileCache(file) : null;
+		const properties: Record<string, string[]> = {};
+		for (const [key, value] of Object.entries(cache?.frontmatter ?? {})) {
+			const values = Array.isArray(value) ? value : [value];
+			properties[key.toLowerCase()] = values.filter((v) => v !== null && v !== undefined && typeof v !== 'object').map((v) => String(v).toLowerCase());
+		}
+		const tags = (cache ? (getAllTags(cache) ?? []) : []).map((tag) => tag.replace(/^#/, '').toLowerCase());
+		return { path, properties, tags };
+	}
+
+	/** Learned terminology for a note, or null when the glossary has nothing. Memoized per glossary change. */
+	termsFor(path: string, target: TargetLanguage): TermResolver | null {
+		if (this.resolverEpoch !== this.glossary.epoch) {
+			this.resolvers.clear();
+			this.resolverEpoch = this.glossary.epoch;
+		}
+		const key = `${target} ${path}`;
+		if (this.resolvers.has(key)) return this.resolvers.get(key) ?? null;
+		const data = this.glossary.data;
+		const empty = Object.keys(data.entries).length === 0 && Object.keys(data.domains).length === 0;
+		const resolver = empty ? null : createResolver(data, this.noteContext(path), target);
+		this.resolvers.set(key, resolver);
+		return resolver;
+	}
+
+	/** Redraws translated text after the glossary changed (outdated sentences are requested again). */
+	private scheduleGlossaryRefresh(): void {
+		if (this.glossaryTimer !== null) return;
+		this.glossaryTimer = window.setTimeout(() => {
+			this.glossaryTimer = null;
+			for (const view of this.editorViews) view.dispatch({ effects: refreshEffect.of(null) });
+			this.reading.refreshAll();
+		}, 100);
+	}
+
+	fixTranslation(path: string, sentenceHash: string, target: TargetLanguage): void {
+		const view = this.findMarkdownView(path);
+		if (!view) return;
+		const note = this.parse(path, view.getViewData());
+		const sentence = note.sentences.find((s) => s.hash === sentenceHash);
+		if (!sentence) return;
+		const display = this.service.display(path, sentence, target);
+		if (display.kind !== 'translated') {
+			new Notice(t('correction.not-translated'));
+			return;
+		}
+		new CorrectionModal(this, { path, sentence, translation: display.text, target }).open();
 	}
 
 	parse(path: string, text: string): NoteModel {
@@ -428,6 +499,10 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 		const cacheNote = (path: string) => notePathForCache(this.settings.cacheFolder, path);
 
 		const onCacheChange = async (file: TFile) => {
+			if (file.path === normalizePath(this.settings.glossaryFile)) {
+				this.glossary.handleExternalChange(await this.app.vault.read(file));
+				return;
+			}
 			if (file.path === namesPath(this.settings.cacheFolder)) {
 				this.nameStore.handleExternalChange(await this.app.vault.read(file));
 				return;

@@ -67,4 +67,17 @@ describe('Mobile (view-only)', function () {
 		await browser.pause(800);
 		expect((await mockStats()).requests).toBe(before);
 	});
+
+	it('keeps showing a synced translation after the glossary changed, without requests', async function () {
+		const before = (await mockStats()).requests;
+		await openNote(NOTE, 'preview');
+		await browser.executeObsidian(({ app, obsidian, plugins }) => {
+			const view = app.workspace.getActiveViewOfType(obsidian.MarkdownView)!;
+			plugins.transparentTranslate.setMode(view.leaf, 'en');
+			plugins.transparentTranslate.glossary.upsert({ kind: 'map', src: 'Satz', target: 'en', to: 'sentence', scope: {} });
+		});
+		await browser.waitUntil(async () => (await readingText()).includes('This is the first sentence (synced).'));
+		await browser.pause(1000);
+		expect((await mockStats()).requests).toBe(before);
+	});
 });

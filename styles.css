@@ -258,3 +258,42 @@
 	color: var(--text-accent);
 	transition: color 300ms ease-out;
 }
+
+/* ---- Glossary ---- */
+
+.tt-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--size-4-1);
+	margin-bottom: var(--size-4-3);
+}
+
+.tt-chip {
+	padding: var(--size-2-1) var(--size-4-2);
+	height: auto;
+}
+
+.tt-chip.is-selected {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.tt-correction-block {
+	margin-bottom: var(--size-4-2);
+}
+
+.tt-correction-label {
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+	margin-bottom: var(--size-2-1);
+}
+
+.tt-correction-text {
+	padding: var(--size-4-2);
+	background-color: var(--background-secondary);
+	border-radius: var(--radius-s);
+}
+
+.tt-glossary-modal {
+	width: min(720px, 92vw);
+}

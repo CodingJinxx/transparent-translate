@@ -60,6 +60,8 @@ export interface MockStats {
 	requests: number;
 	sentences: string[];
 	authorization: string[];
+	/** User prompt of every request, to check what was sent (terminology, domain). */
+	prompts: string[];
 }
 
 async function body(req: IncomingMessage): Promise<string> {
@@ -69,7 +71,7 @@ async function body(req: IncomingMessage): Promise<string> {
 }
 
 export function startMockLlm(port: number): Promise<Server> {
-	const stats: MockStats = { requests: 0, sentences: [], authorization: [] };
+	const stats: MockStats = { requests: 0, sentences: [], authorization: [], prompts: [] };
 	const server = createServer((req, res) => {
 		void (async () => {
 			const send = (status: number, payload: unknown) => {
@@ -82,6 +84,7 @@ export function startMockLlm(port: number): Promise<Server> {
 				stats.requests = 0;
 				stats.sentences = [];
 				stats.authorization = [];
+				stats.prompts = [];
 				return send(200, { ok: true });
 			}
 			if (req.method === 'GET' && url.endsWith('/models')) return send(200, { data: [{ id: 'mock-small' }, { id: 'mock-large' }] });
@@ -95,9 +98,17 @@ export function startMockLlm(port: number): Promise<Server> {
 			const target = system.includes('into German') ? 'de' : 'en';
 			const lines = [...user.matchAll(/^<<(\d+)>> (.*)$/gm)];
 			stats.sentences.push(...lines.map((m) => m[2]!));
+			stats.prompts.push(user);
+			// Terminology lines ("- term → translation") are applied like a model that follows them.
+			const terms = [...user.matchAll(/^- (.+?) → (.+?)(?: \(.*\))?$/gm)].map((m) => [m[1]!, m[2]!] as const);
+			const translate = (text: string) => {
+				let out = mockTranslate(text, target);
+				for (const [src, to] of terms) out = out.split(src).join(to);
+				return out;
+			};
 			const content = request.response_format
-				? JSON.stringify({ translations: lines.map((m) => ({ lang: sourceLang(m[2]!), text: mockTranslate(m[2]!, target) })) })
-				: lines.map((m) => `<<${m[1]}>> {${sourceLang(m[2]!)}} ${mockTranslate(m[2]!, target)}`).join('\n');
+				? JSON.stringify({ translations: lines.map((m) => ({ lang: sourceLang(m[2]!), text: translate(m[2]!) })) })
+				: lines.map((m) => `<<${m[1]}>> {${sourceLang(m[2]!)}} ${translate(m[2]!)}`).join('\n');
 			// A little latency, like a real endpoint, so pending states are visible.
 			await new Promise((resolve) => setTimeout(resolve, 150));
 			send(200, {

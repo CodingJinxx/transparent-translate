@@ -5,6 +5,7 @@ import { t } from '../i18n';
 import type TransparentTranslatePlugin from '../main';
 import { addExcludedFolder, canEditExcludedFiles, isFolderExcluded } from '../obsidian/internals';
 import { DEFAULT_SETTINGS, type ConfirmDelete, type EditSessionDefault } from '../settings';
+import { GlossaryModal } from './glossary-modal';
 import { PROVIDER_PRESETS, presetById, type ProviderPresetId } from '../translator/providers';
 import { parseExtraBody } from '../translator/llm-translator';
 
@@ -51,6 +52,7 @@ export class TransparentTranslateSettingTab extends PluginSettingTab {
 			this.translationSection();
 			this.editingSection();
 		}
+		this.glossarySection();
 		this.foldersSection();
 		if (!this.plugin.isMobile) this.costSection();
 		this.advancedSection();
@@ -414,6 +416,44 @@ export class TransparentTranslateSettingTab extends PluginSettingTab {
 						this.settings.noteEditPreferences = {};
 						await this.save();
 						this.display();
+					}),
+				);
+		}
+	}
+
+	private glossarySection(): void {
+		const el = this.containerEl;
+		new Setting(el).setName(t('settings.heading.glossary')).setHeading();
+		el.createEl('p', { cls: 'setting-item-description', text: t('settings.glossary-intro') });
+		new Setting(el)
+			.setName(t('settings.glossary-manage'))
+			.setDesc(t('settings.glossary-manage.desc'))
+			.addButton((button) => button.setButtonText(t('settings.glossary-manage.button')).setCta().onClick(() => new GlossaryModal(this.plugin).open()));
+		let pendingFile = this.settings.glossaryFile;
+		new Setting(el)
+			.setName(t('settings.glossary-file'))
+			.setDesc(t('settings.glossary-file.desc'))
+			.addText((text) => text.setValue(this.settings.glossaryFile).onChange((value) => (pendingFile = value)))
+			.addButton((button) =>
+				button.setButtonText(t('settings.glossary-file.apply')).onClick(async () => {
+					const next = normalizePath(pendingFile.trim());
+					if (!next || next === this.settings.glossaryFile) return;
+					await this.plugin.glossary.flush();
+					this.settings.glossaryFile = next.endsWith('.md') ? next : `${next}.md`;
+					this.plugin.glossary.reset();
+					await this.save(true);
+					await this.plugin.glossary.load();
+					this.display();
+				}),
+			);
+		if (!this.plugin.isMobile) {
+			new Setting(el)
+				.setName(t('settings.glossary-auto'))
+				.setDesc(t('settings.glossary-auto.desc'))
+				.addToggle((toggle) =>
+					toggle.setValue(this.settings.glossaryAutoUpdate).onChange(async (value) => {
+						this.settings.glossaryAutoUpdate = value;
+						await this.save(true);
 					}),
 				);
 		}

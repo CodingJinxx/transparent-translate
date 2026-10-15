@@ -48,6 +48,12 @@ export interface TransparentTranslateSettings {
 	confirmDelete: ConfirmDelete;
 	noteEditPreferences: Record<string, NoteEditPreference>;
 
+	// Glossary
+	/** Note that holds the learned terminology (outside the cache folder, so clearing the cache keeps it). */
+	glossaryFile: string;
+	/** Translate sentences again when the glossary entries that apply to them changed. */
+	glossaryAutoUpdate: boolean;
+
 	// Folders
 	cacheFolder: string;
 	excludedFolders: string;
@@ -95,6 +101,9 @@ export const DEFAULT_SETTINGS: TransparentTranslateSettings = {
 	applyOnLeave: true,
 	confirmDelete: 'off',
 	noteEditPreferences: {},
+
+	glossaryFile: 'Translation glossary.md',
+	glossaryAutoUpdate: true,
 
 	cacheFolder: '_Translations',
 	excludedFolders: '',

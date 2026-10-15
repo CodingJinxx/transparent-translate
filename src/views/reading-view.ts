@@ -1,6 +1,7 @@
 import {
 	MarkdownRenderChild,
 	MarkdownRenderer,
+	Menu,
 	type MarkdownPostProcessor,
 	type MarkdownPostProcessorContext,
 	type WorkspaceLeaf,
@@ -10,6 +11,7 @@ import { sentencesInLines } from '../core/note';
 import { lineEnd } from '../core/text';
 import { isTargetLanguage, type TargetLanguage } from '../core/types';
 import type { TranslateHost } from '../host';
+import { t } from '../i18n';
 import { log } from '../log';
 import { animationKey, claimAnimation, decode } from './decode-animation';
 
@@ -40,6 +42,8 @@ export class ReadingViewController {
 	private readonly byElement = new WeakMap<HTMLElement, Section>();
 	/** Scratch containers this controller renders into; nested renders inside them are ignored. */
 	private readonly own = new WeakSet<HTMLElement>();
+	/** Sections that already have the context menu for translated sentences. */
+	private readonly menuBound = new WeakSet<HTMLElement>();
 
 	constructor(private readonly host: TranslateHost) {}
 
@@ -155,11 +159,35 @@ export class ReadingViewController {
 		el.toggleClass('tt-has-pending', markdown.pending);
 		el.setAttr('lang', mode);
 		section.shown = markdown.text;
+		this.bindMenu(section);
 		if (this.host.settings.animateTranslations) {
 			el.querySelectorAll<HTMLElement>('span.tt-s[data-tt]').forEach((span) => {
 				if (claimAnimation(animationKey(section.path, mode, span.dataset.tt ?? ''))) decode(span);
 			});
 		}
+	}
+
+	/** Right-click on a translated sentence offers "Fix translation". Links keep Obsidian's own menu. */
+	private bindMenu(section: Section): void {
+		if (this.menuBound.has(section.el)) return;
+		this.menuBound.add(section.el);
+		section.el.addEventListener('contextmenu', (event) => {
+			const target = event.target instanceof HTMLElement ? event.target : null;
+			const span = target?.closest<HTMLElement>('span.tt-t[data-tt]');
+			const mode = this.host.modeOf(section.leaf, section.path);
+			if (!target || !span || target.closest('a') || section.shown === null || !isTargetLanguage(mode)) return;
+			const hash = span.dataset.tt;
+			if (!hash) return;
+			event.preventDefault();
+			const menu = new Menu();
+			menu.addItem((item) =>
+				item
+					.setTitle(t('menu.fix-translation'))
+					.setIcon('pencil-line')
+					.onClick(() => this.host.fixTranslation(section.path, hash, mode)),
+			);
+			menu.showAtMouseEvent(event);
+		});
 	}
 
 	/** Puts Obsidian's own rendering back. `animate` plays the decode animation when leaving a translated mode. */
@@ -203,9 +231,10 @@ export class ReadingViewController {
 					missing = true;
 					return { kind: 'pending' };
 				}
+				if (display.kind === 'translated' && display.outdated) missing = true;
 				return display;
 			},
-			{ markerClassPrefix: MARKER_PREFIX, wrapTranslated: host.settings.animateTranslations },
+			{ markerClassPrefix: MARKER_PREFIX, wrapTranslated: true, wrapSame: host.settings.animateTranslations },
 		);
 		if (missing) host.service.request(path, note, note.sentences, mode, host.noteTitle(path));
 		const animating = host.settings.animateTranslations && composed.same > 0;

@@ -1,11 +1,15 @@
 import { MarkdownView, Notice, TFile } from 'obsidian';
 import { nameKey } from './core/names';
 import { normalizeSentence } from './core/text';
-import { isTargetLanguage, type DisplayMode } from './core/types';
+import { isTargetLanguage, type DisplayMode, type TargetLanguage } from './core/types';
 import { t } from './i18n';
 import type TransparentTranslatePlugin from './main';
 import { BulkTranslateModal, FolderSuggestModal } from './ui/bulk-translate';
 import { ConfirmModal } from './ui/confirm-modal';
+import { CorrectionModal, FixSentenceModal, type CorrectionRequest } from './ui/correction-modal';
+import { GlossaryModal } from './ui/glossary-modal';
+import { TermReviewModal } from './ui/term-review-modal';
+import type { ReviewPair } from './core/term-review';
 import { RestoreOriginalModal } from './ui/restore-modal';
 
 /** Registers all commands. No default hotkeys: users bind their own. */
@@ -160,6 +164,72 @@ export function registerCommands(plugin: TransparentTranslatePlugin): void {
 		},
 	});
 
+	// ---- Glossary -------------------------------------------------------
+
+	plugin.addCommand({
+		id: 'manage-glossary',
+		name: t('command.manage-glossary'),
+		callback: () => new GlossaryModal(plugin).open(),
+	});
+
+	/** The note in the active view with its translated mode, if it shows a translation. */
+	const translatedNote = (view: MarkdownView | null): { path: string; mode: TargetLanguage; view: MarkdownView } | null => {
+		if (!view?.file || !plugin.isTranslatable(view.file.path)) return null;
+		const mode = plugin.modeOf(view.leaf, view.file.path);
+		return isTargetLanguage(mode) ? { path: view.file.path, mode, view } : null;
+	};
+
+	plugin.addCommand({
+		id: 'fix-translation',
+		name: t('command.fix-translation'),
+		checkCallback: (checking) => {
+			const current = translatedNote(activeView());
+			if (!current) return false;
+			if (checking) return true;
+			const note = plugin.parse(current.path, current.view.getViewData());
+			const items: CorrectionRequest[] = [];
+			for (const sentence of note.sentences) {
+				const display = plugin.service.display(current.path, sentence, current.mode);
+				if (display.kind === 'translated') items.push({ path: current.path, sentence, translation: display.text, target: current.mode });
+			}
+			if (items.length === 0) {
+				new Notice(t('correction.none'));
+				return true;
+			}
+			new FixSentenceModal(plugin, items, (item) => new CorrectionModal(plugin, item).open()).open();
+			return true;
+		},
+	});
+
+	plugin.addCommand({
+		id: 'update-outdated',
+		name: t('command.update-outdated'),
+		checkCallback: (checking) => {
+			const current = translatedNote(activeView());
+			if (!current || !plugin.service.canTranslate) return false;
+			if (checking) return true;
+			const note = plugin.parse(current.path, current.view.getViewData());
+			void plugin.glossary.load().then(async () => {
+				new Notice(t('notice.updating-outdated'));
+				const outcome = await plugin.service.translate(current.path, note, note.sentences, current.mode, plugin.noteTitle(current.path), undefined, true);
+				new Notice(outcome.translated + outcome.failed === 0 ? t('notice.nothing-outdated') : t('notice.updated-outdated', { count: outcome.translated }));
+			});
+			return true;
+		},
+	});
+
+	plugin.addCommand({
+		id: 'review-terms',
+		name: t('command.review-terms'),
+		checkCallback: (checking) => {
+			const current = translatedNote(activeView());
+			if (!current || !plugin.translator) return false;
+			if (checking) return true;
+			void reviewTerms(plugin, current.path, current.mode, current.view.getViewData());
+			return true;
+		},
+	});
+
 	plugin.addCommand({
 		id: 'prune-translation-cache',
 		name: t('command.prune-cache'),
@@ -191,4 +261,37 @@ export function registerCommands(plugin: TransparentTranslatePlugin): void {
 			new Notice(t('notice.pruned', { count: removed }));
 		},
 	});
+}
+
+/** Asks the model which terms of the translation were a judgment call and lets the user settle them. */
+async function reviewTerms(plugin: TransparentTranslatePlugin, path: string, mode: TargetLanguage, text: string): Promise<void> {
+	const translator = plugin.translator;
+	if (!translator) return;
+	await plugin.store.load(path);
+	const note = plugin.parse(path, text);
+	const pairs: ReviewPair[] = [];
+	const seen = new Set<string>();
+	for (const sentence of note.sentences) {
+		const translation = plugin.store.lookup(path, sentence.hash, mode);
+		if (translation === undefined || seen.has(sentence.hash) || normalizeSentence(translation) === normalizeSentence(sentence.masked)) continue;
+		seen.add(sentence.hash);
+		pairs.push({ source: sentence.masked, translation });
+	}
+	if (pairs.length === 0) {
+		new Notice(t('review.no-translations'));
+		return;
+	}
+	new Notice(t('review.running'));
+	try {
+		await plugin.glossary.load();
+		const known = plugin.glossary.entries().map(({ entry }) => entry.src);
+		const { terms } = await translator.reviewTerms(pairs, mode, known);
+		if (terms.length === 0) {
+			new Notice(t('review.none'));
+			return;
+		}
+		new TermReviewModal(plugin, path, mode, terms).open();
+	} catch (error) {
+		new Notice(t('notice.translation-error', { error: (error as Error).message }), 8000);
+	}
 }

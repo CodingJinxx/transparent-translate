@@ -95,6 +95,8 @@ export function createLivePreviewExtension(host: TranslateHost): Extension {
 			const d = host.service.display(path, s, mode);
 			switch (d.kind) {
 				case 'translated': {
+					// The glossary changed since this was translated: a new translation is requested, the old one stays until it arrives.
+					if (d.outdated) missing = true;
 					const widget = Decoration.replace({
 						widget: new SentenceWidget(
 							d.text,
@@ -342,6 +344,17 @@ export function createLivePreviewExtension(host: TranslateHost): Extension {
 					.setIcon('file-pen-line')
 					.onClick(() => editOriginalAt(view, pos)),
 			);
+			const value = read(view.state);
+			const range = value?.active && value.path ? value.ranges.find((r) => pos >= r.from && pos <= r.to) : undefined;
+			if (value?.path && range && isTargetLanguage(value.mode)) {
+				const { path, mode } = value;
+				menu.addItem((item) =>
+					item
+						.setTitle(t('menu.fix-translation'))
+						.setIcon('pencil-line')
+						.onClick(() => host.fixTranslation(path, range.hash, mode)),
+				);
+			}
 			menu.showAtMouseEvent(event);
 		},
 		openLink(href, sourcePath, event) {

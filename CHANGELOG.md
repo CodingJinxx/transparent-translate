@@ -4,6 +4,20 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-15
+
+### Added
+
+- **A glossary that learns.** Correct a translation from the right-click menu of a translated sentence (Reading view and Live Preview) or with **Fix translation of a sentence…**: select the term, enter what it should be, optionally mark wrong words, and choose where it applies (note, frontmatter property, tag, folder or the whole vault; the most specific wins). Terms also match inside compounds and inflections (`Schein` finds `Scheinkriterien`).
+- **Review terms in this note…** asks the model which terms it was unsure about and lets you settle them in one dialog.
+- **Manage translation glossary** lists, adds, edits and deletes entries (translate as, never translate as, do not translate) and a subject area per scope. Entries live in a visible note (`Translation glossary.md` by default) outside the cache folder, so they sync and survive "Clear cache".
+- Cached translations remember which entries applied. When an entry changes, only the sentences that contain the term are translated again (setting to turn this off, and the command **Update translations affected by glossary changes**). Undo for corrections.
+- Entries sent to the model are limited to those matching the request and cleaned of anything that could look like an instruction.
+
+### Changed
+
+- The setting for terms that are never translated is now called "Terms that are never translated".
+
 ## [0.2.2] - 2026-10-15
 
 ### Fixed
@@ -62,7 +76,8 @@ First release.
 - View-only mode on mobile (no requests, no key).
 - English and German interface.
 
-[Unreleased]: https://github.com/CodingJinxx/transparent-translate/compare/0.2.2...HEAD
+[Unreleased]: https://github.com/CodingJinxx/transparent-translate/compare/0.3.0...HEAD
+[0.3.0]: https://github.com/CodingJinxx/transparent-translate/compare/0.2.2...0.3.0
 [0.2.2]: https://github.com/CodingJinxx/transparent-translate/compare/0.2.1...0.2.2
 [0.2.1]: https://github.com/CodingJinxx/transparent-translate/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/CodingJinxx/transparent-translate/compare/0.1.1...0.2.0

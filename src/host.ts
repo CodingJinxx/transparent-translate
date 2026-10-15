@@ -26,6 +26,8 @@ export interface TranslateHost {
 	registerEditorView(view: EditorView): void;
 	unregisterEditorView(view: EditorView): void;
 
+	/** Opens the dialog to correct the translation of one sentence. */
+	fixTranslation(path: string, sentenceHash: string, target: TargetLanguage): void;
 	/** Called after an edit session replaced original text with `newText`. */
 	recordReplacement(path: string, oldText: string, newText: string, target: TargetLanguage): void;
 	/** Called after translated sentences were deleted from the file. */

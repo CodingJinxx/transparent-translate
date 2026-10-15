@@ -27,7 +27,7 @@ Transparent Translate adds a language switch to every note: **Original → Engli
 - **Edit in translated views.** Type between sentences as usual. Click a translated sentence to edit it: a small banner asks whether to replace your original with the new text or to edit the original instead. Every change is a normal editor change, so <kbd>Ctrl/Cmd</kbd>+<kbd>Z</kbd> undoes it.
 - **Bring your own model.** Presets for LM Studio, OpenAI, OpenRouter and the Meta Model API, or any other OpenAI-compatible endpoint. Fetch the model list and test the connection from the settings.
 - **File and folder names.** Optionally show translated names in the file explorer, tab titles, note titles and breadcrumbs. Only the display changes: files and folders are never renamed, and while you rename something you see its real name.
-- **Glossary.** Terms that must never be translated (product names, course names).
+- **A glossary that learns.** Correct a translation from its right-click menu ("Fix translation…") and the plugin remembers: `Schein → course credit` applies to `Scheinkriterien`, `Scheinen` and every other sentence that contains the term, per note, folder, frontmatter property, tag or the whole vault. Let the model list the terms it was unsure about and settle them in one dialog. See [The glossary](#the-glossary).
 - **Bulk translation** of a folder, with a token and cost estimate before anything is sent.
 - **Mobile: view-only.** Phones and tablets show translations that were generated on a desktop and synced. They never call an API and need no key.
 - **English and German interface**, following Obsidian's language setting.
@@ -92,6 +92,10 @@ No command has a default hotkey; bind your own under **Settings → Hotkeys**.
 | Show original / Show English / Show German | Set the display language of the current note. |
 | Cycle display language | Original → English → German. |
 | Show file and folder names in original / English / German | Sets the language of names in the explorer, tabs and titles. Off by default. |
+| Fix the translation of a sentence… | Pick a translated sentence and correct a term (also available from the right-click menu of a translated sentence). |
+| Review terms in this note… | Asks the model which terms were a judgment call and lets you settle them. |
+| Manage translation glossary | List, add, edit and delete glossary entries and the subject area of a scope. |
+| Update translations affected by glossary changes | Translates again the sentences of this note whose glossary entries changed (automatic by default). |
 | Re-translate this note | Drops this note's cached translations and requests them again. |
 | Translate folder… | Counts what is missing, shows a token and cost estimate, and asks before starting. |
 | Copy original text | Copies the selection (or the note) as it is on disk. Normal copy copies what you see. |
@@ -102,7 +106,7 @@ No command has a default hotkey; bind your own under **Settings → Hotkeys**.
 ## Privacy and network use
 
 > [!IMPORTANT]
-> **Note text is sent to the endpoint you configure.** When a note is switched to English or German (or a folder is bulk-translated), the text of its sentences, the note title and your glossary are sent to that endpoint for translation. With **File and folder names** turned on, the names that are visible in the explorer, tabs and titles (without extension) and the folder they are in are sent as well. Links, code, math, tags and other protected syntax are replaced by placeholders before sending. Frontmatter and code blocks are never sent.
+> **Note text is sent to the endpoint you configure.** When a note is switched to English or German (or a folder is bulk-translated), the text of its sentences, the note title and your glossary are sent to that endpoint for translation. With **File and folder names** turned on, the names that are visible in the explorer, tabs and titles (without extension) and the folder they are in are sent as well. Glossary entries, subject areas and meanings are sent only together with the sentences they match. Links, code, math, tags and other protected syntax are replaced by placeholders before sending. Frontmatter and code blocks are never sent.
 
 - **Which service:** only the OpenAI-compatible endpoint you enter in the settings (for example the Meta Model API, OpenAI, OpenRouter, or a local server like LM Studio). With a local server, nothing leaves your computer. Which provider and plan you use, and what their terms allow, is your decision.
 - **Account and payment:** a cloud provider needs an account and usually charges per token. Local servers need neither.
@@ -126,6 +130,18 @@ These files are plain JSON behind a one-line "generated, do not edit" warning. T
 - **Names:** translated file and folder names are stored together in one file, `_Translations/_names.md`, keyed by the name (so renaming or moving a note needs no migration).
 - **Renaming or deleting a note** moves or deletes its cache file. Renaming the cache folder in the settings moves the existing cache.
 - **Uninstalling** leaves the folder in place. Delete it yourself if you no longer need it.
+
+## The glossary
+
+Models pick plausible but wrong words for domain terms (a German *Schein* is not a certificate, *LP* are ECTS credits). The glossary lets you settle a term once.
+
+- **Fix a translation:** right-click a translated sentence (Reading view or Live Preview) and choose **Fix translation…**, or run the command of the same name (this also works on mobile). Click the term in the original, type what it should be, optionally mark wrong words in the translation, and choose where it applies. **Undo** is in the notice.
+- **Where it applies:** a note, a frontmatter property (`course: SYS`), a tag, a folder, or the whole vault. The most specific entry wins, so the same word can mean different things in different subjects. The dialog suggests the folder of the note.
+- **How terms match:** `Schein` also matches inside `Scheinkriterien` and `Scheinen`; short terms like `LP` match only as whole words. A longer entry overrides a shorter one inside it.
+- **Three kinds of entries:** *translate as*, *never translate as* (a word you know is wrong) and *do not translate*. A scope can also carry a short **subject area** ("German university course notes") that is sent with its requests.
+- **Review terms in this note…:** one request asks the model which terms it was unsure about, with alternatives. You settle the ones you care about; the model cannot add entries by itself, and it can only name terms that occur in the note.
+- **Changes take effect where they matter:** each cached translation remembers which entries applied. When an entry changes, only sentences containing that term are translated again (when you view the note, or with **Update translations affected by glossary changes**). Turn this off under **Settings → Glossary** to update only on command. On mobile the old translation stays until a computer updates it.
+- **Where it is stored:** in a note, `Translation glossary.md` by default. It is a visible note like the cache, so it syncs and can be reviewed, but it lives outside the cache folder, so clearing the cache never deletes what you taught the plugin. It is never translated.
 
 ## Mobile
 

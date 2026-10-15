@@ -2,6 +2,7 @@ import type { TargetLanguage } from '../core/types';
 import { buildMessages, type ChatMessage, type PromptItem } from '../core/prompt';
 import { parseJsonOutput, parseNumberedOutput, type ParseResult } from '../core/output-parser';
 import { placeholdersValid, tidyPlaceholders } from '../core/protect';
+import { buildReviewMessages, parseReviewOutput, type ReviewPair, type ReviewTerm } from '../core/term-review';
 import {
 	TranslatorError,
 	type ItemResult,
@@ -159,6 +160,18 @@ export class LlmTranslator implements Translator {
 		}
 
 		return { items: results, usage, model: config.model };
+	}
+
+	/** Asks which terms of a translation were a judgment call. See `core/term-review`. */
+	async reviewTerms(
+		pairs: readonly ReviewPair[],
+		target: TargetLanguage,
+		knownTerms: readonly string[],
+		signal?: AbortSignal,
+	): Promise<{ terms: ReviewTerm[]; usage: TokenUsage }> {
+		const config = this.checkedConfig();
+		const response = await this.chat(buildReviewMessages(pairs, target, knownTerms), config, signal);
+		return { terms: parseReviewOutput(response.content, pairs.map((p) => p.source)), usage: response.usage };
 	}
 
 	/** Lists model ids from `GET /models`. Not every server supports it. */

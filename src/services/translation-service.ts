@@ -6,6 +6,7 @@ import type { NoteModel, Sentence, TargetLanguage } from '../core/types';
 import type { Translator } from '../translator/translator';
 import { TranslatorError } from '../translator/translator';
 import { log } from '../log';
+import type { TermResolver } from '../core/glossary-match';
 import type { CacheStore } from './cache-store';
 
 export interface TranslationServiceDeps {
@@ -17,6 +18,10 @@ export interface TranslationServiceDeps {
 	glossary: () => readonly string[];
 	/** Called once per failed request (not per sentence). */
 	onError: (error: Error) => void;
+	/** Learned terminology that applies to a note, if the glossary has any entries. */
+	terms?: (notePath: string, target: TargetLanguage) => TermResolver | null;
+	/** Request translations again when the glossary changed (default on). */
+	autoUpdate?: () => boolean;
 }
 
 export interface TranslateOutcome {
@@ -103,6 +108,22 @@ export class TranslationService {
 		return detectLanguage(sentence.masked) === target;
 	}
 
+	private resolver(notePath: string, target: TargetLanguage): TermResolver | null {
+		return this.deps.terms?.(notePath, target) ?? null;
+	}
+
+	/** True if the glossary entries that apply to the sentence changed since it was translated. */
+	private isOutdated(notePath: string, sentence: Sentence, target: TargetLanguage): boolean {
+		const resolver = this.resolver(notePath, target);
+		if (!resolver) return false;
+		if (this.failures.get(key(notePath, target))?.has(sentence.hash)) return false;
+		const cached = this.deps.store.lookup(notePath, sentence.hash, target);
+		// A translation that equals the original was never changed by terminology.
+		if (cached !== undefined && normalizeSentence(cached) === normalizeSentence(sentence.masked)) return false;
+		const stored = this.deps.store.peek(notePath)?.sentences[sentence.hash]?.gl?.[target] ?? '';
+		return resolver.signature(sentence.masked) !== stored;
+	}
+
 	/** What a sentence should show in `target` mode right now. Synchronous. */
 	display(notePath: string, sentence: Sentence, target: TargetLanguage): SentenceDisplay {
 		if (this.loadsEpoch !== this.deps.store.epoch) {
@@ -120,7 +141,8 @@ export class TranslationService {
 		const masked = this.cached(notePath, sentence, target);
 		if (masked !== undefined) {
 			if (normalizeSentence(masked) === normalizeSentence(sentence.masked)) return { kind: 'same' };
-			return { kind: 'translated', text: restore(masked, sentence.tokens) };
+			const outdated = (this.deps.autoUpdate?.() ?? true) && this.isOutdated(notePath, sentence, target);
+			return { kind: 'translated', text: restore(masked, sentence.tokens), ...(outdated ? { outdated: true } : {}) };
 		}
 		if (this.alreadyInTarget(notePath, sentence, target)) return { kind: 'same' };
 		if (this.inflight.get(key(notePath, target))?.has(sentence.hash)) return { kind: 'pending' };
@@ -155,6 +177,8 @@ export class TranslationService {
 		target: TargetLanguage,
 		noteTitle: string,
 		signal?: AbortSignal,
+		/** Also translate sentences whose glossary entries changed. Default: the auto-update setting. */
+		includeOutdated = this.deps.autoUpdate?.() ?? true,
 	): Promise<TranslateOutcome> {
 		const outcome: TranslateOutcome = { translated: 0, failed: 0 };
 		if (!this.canTranslate) return outcome;
@@ -171,7 +195,8 @@ export class TranslationService {
 		const seen = new Set<string>();
 		for (const s of sentences) {
 			if (seen.has(s.hash) || inflight.has(s.hash) || failed?.has(s.hash)) continue;
-			if (this.cached(notePath, s, target) !== undefined || this.alreadyInTarget(notePath, s, target)) continue;
+			if (this.alreadyInTarget(notePath, s, target)) continue;
+			if (this.cached(notePath, s, target) !== undefined && !(includeOutdated && this.isOutdated(notePath, s, target))) continue;
 			seen.add(s.hash);
 			todo.push(s);
 		}
@@ -222,12 +247,18 @@ export class TranslationService {
 		const translator = this.deps.translator();
 		const combined = signal ? anySignal([signal, this.controller.signal]) : this.controller.signal;
 		const failures = this.failures.get(k) ?? new Map<string, string>();
+		const resolver = this.resolver(notePath, target);
 		try {
 			if (!translator) throw new TranslatorError('No translator', 'config');
 			const result = await translator.translate(
 				batch.map((s) => ({ masked: s.masked, placeholderCount: s.tokens.length })),
 				target,
-				{ noteTitle, glossary: this.deps.glossary(), context: this.context(note, batch) },
+				{
+					noteTitle,
+					glossary: this.deps.glossary(),
+					context: this.context(note, batch),
+					...(resolver ? { terms: resolver.forBatch(batch.map((s) => s.masked)) } : {}),
+				},
 				combined,
 			);
 			const translatedAt = new Date().toISOString();
@@ -242,9 +273,14 @@ export class TranslationService {
 					if (lang === 'en' || lang === 'de') {
 						if (lang !== target) this.deps.store.put(notePath, s.hash, lang, s.masked);
 					}
+					const signature = resolver?.signature(s.masked) ?? '';
+					const gl = { ...this.deps.store.peek(notePath)?.sentences[s.hash]?.gl };
+					if (signature) gl[target] = signature;
+					else delete gl[target];
 					this.deps.store.put(notePath, s.hash, target, text, {
 						model: result.model,
 						translatedAt,
+						gl,
 						...(lang ? { lang } : {}),
 					});
 					outcome.translated++;

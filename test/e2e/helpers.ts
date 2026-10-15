@@ -72,6 +72,7 @@ export async function freshVault(): Promise<void> {
 		plugin.service.clearFailures();
 		plugin.store.reset();
 		plugin.nameStore.reset();
+		plugin.glossary.reset();
 		plugin.names.reset();
 		const folder = app.vault.getFolderByPath(plugin.settings.cacheFolder);
 		if (folder) await app.vault.delete(folder, true);

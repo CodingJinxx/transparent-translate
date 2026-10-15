@@ -24,9 +24,10 @@ Use a test vault, not your real notes.
 ```
 src/
   core/          Pure logic, no Obsidian imports: blocks, sentences, placeholders,
-                 hashing, cache format, prompt, output parsing, language detection
+                 hashing, cache format, prompt, output parsing, language detection,
+                 names and glossary (format, matching, term review)
   translator/    OpenAI-compatible client (HTTP injected, so it runs in tests)
-  services/      Cache stores and translation queues (notes and names)
+  services/      Cache stores, glossary store and translation queues (notes and names)
   views/         Reading view controller, Live Preview (CodeMirror 6) extension,
                  decode animation, file and folder name display (name-display.ts)
   ui/            Settings tab and modals

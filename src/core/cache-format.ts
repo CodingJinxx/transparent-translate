@@ -23,6 +23,12 @@ export interface CacheEntry {
 	de?: string;
 	model?: string;
 	translatedAt?: string;
+	/**
+	 * Fingerprint of the glossary entries that applied when each translation was
+	 * made (absent: none applied). A different fingerprint now means the
+	 * translation is outdated and is requested again.
+	 */
+	gl?: { en?: string; de?: string };
 }
 
 export interface ReplacedOriginal {
@@ -61,6 +67,12 @@ function sanitizeEntry(value: unknown): CacheEntry | null {
 	if (typeof value.de === 'string') entry.de = value.de;
 	if (typeof value.model === 'string') entry.model = value.model;
 	if (typeof value.translatedAt === 'string') entry.translatedAt = value.translatedAt;
+	if (isRecord(value.gl)) {
+		const gl: { en?: string; de?: string } = {};
+		if (typeof value.gl.en === 'string') gl.en = value.gl.en;
+		if (typeof value.gl.de === 'string') gl.de = value.gl.de;
+		if (gl.en !== undefined || gl.de !== undefined) entry.gl = gl;
+	}
 	return entry;
 }
 

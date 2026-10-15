@@ -118,6 +118,7 @@ export class CacheStore {
 		const cache = this.ensure(notePath);
 		const entry: CacheEntry = { ...(cache.sentences[hash] ?? {}), ...meta };
 		entry[target] = text;
+		if (entry.gl && entry.gl.en === undefined && entry.gl.de === undefined) delete entry.gl;
 		cache.sentences[hash] = entry;
 		this.scheduleSave(notePath);
 	}
