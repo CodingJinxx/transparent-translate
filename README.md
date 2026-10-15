@@ -14,6 +14,12 @@
   <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/github/license/CodingJinxx/transparent-translate"></a>
 </p>
 
+<p align="center">
+  <img src="docs/images/demo.gif" width="720" alt="Demo: a German note switches to English and German, a sentence is edited in Live Preview, Fix translation sets Laufzeit to running time everywhere, and the file explorer shows translated names">
+</p>
+
+<p align="center"><b><a href="https://codingjinxx.github.io/transparent-translate/">Website with the demo and install steps</a></b></p>
+
 | Original (as written) | English view |
 | --- | --- |
 | ![A German lecture note with a formula, a list, a table and a callout](docs/images/reading-original.png) | ![The same note displayed in English; formula, links and tags are unchanged](docs/images/reading-english.png) |
@@ -189,13 +195,14 @@ npm run check        # typecheck, lint, guideline check, unit tests
 npm run test:e2e     # end-to-end tests in a sandboxed Obsidian (minAppVersion, latest, mobile emulation)
 npm run test:live    # optional: real endpoint from .llm_connection_details.json (git-ignored)
 npm run screenshots  # regenerate the README screenshots
+npm run demo         # record the demo GIF (needs ffmpeg), see docs/showcase.md
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the project layout, the test setup and the release process.
 
 ## Acknowledgements
 
-Built on the official [Obsidian sample plugin](https://github.com/obsidianmd/obsidian-sample-plugin) template and API. End-to-end tests use [wdio-obsidian-service](https://github.com/jesse-r-s-hines/wdio-obsidian-service). No third-party code is bundled into the plugin.
+Built on the official [Obsidian sample plugin](https://github.com/obsidianmd/obsidian-sample-plugin) template and API. End-to-end tests use [wdio-obsidian-service](https://github.com/jesse-r-s-hines/wdio-obsidian-service). No third-party code is bundled into the plugin. The website's background music was made with [Strudel](https://strudel.cc).
 
 ## License
 

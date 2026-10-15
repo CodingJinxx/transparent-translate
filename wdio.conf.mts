@@ -20,6 +20,7 @@ if (env.CI) console.log('obsidian-cache-key:', JSON.stringify([desktopVersions, 
 
 const vault = 'test/vaults/e2e';
 const screenshots = 'test/e2e/specs/screenshots.e2e.ts';
+const demo = 'test/e2e/specs/demo.e2e.ts';
 const mobileSpec = 'test/e2e/specs/mobile.e2e.ts';
 
 let mockServer: Server | null = null;
@@ -28,8 +29,8 @@ export const config: WebdriverIO.Config = {
 	runner: 'local',
 	framework: 'mocha',
 	specs: ['./test/e2e/specs/**/*.e2e.ts'],
-	// Screenshots only run when asked for explicitly (npm run screenshots).
-	exclude: process.argv.some((a) => a.includes('screenshots')) ? [] : [screenshots],
+	// Screenshots and the demo recording only run when asked for explicitly (npm run screenshots, npm run demo).
+	exclude: [screenshots, demo].filter((spec) => !process.argv.some((a) => a.includes(path.basename(spec)))),
 	// One instance at a time: all instances share one mock server and its request counters.
 	maxInstances: Number(env.WDIO_MAX_INSTANCES || 1),
 

@@ -41,8 +41,8 @@ const DE: Record<string, string> = {
 	'Big O': 'Groß-O',
 };
 
-/** Sentences that are already English and must come back unchanged in English mode. */
-const ALREADY_EN = new Set(['We count steps, not seconds!', 'Big O']);
+/** Sentences and vault names that are already English and must come back unchanged in English mode. */
+const ALREADY_EN = new Set(['We count steps, not seconds!', 'Big O', 'Edit', 'Private', 'Translation glossary']);
 const MIXED = new Set(['Loops multiply the cost, d. h. eine Schleife mit ⟦1⟧ Durchläufen kostet ⟦2⟧ Schritte.']);
 
 /** Source language tag, like a well-behaved model reports it. */
@@ -103,7 +103,13 @@ export function startMockLlm(port: number): Promise<Server> {
 			const terms = [...user.matchAll(/^- (.+?) → (.+?)(?: \(.*\))?$/gm)].map((m) => [m[1]!, m[2]!] as const);
 			const translate = (text: string) => {
 				let out = mockTranslate(text, target);
-				for (const [src, to] of terms) out = out.split(src).join(to);
+				for (const [src, to] of terms) {
+					out = out.split(src).join(to);
+					// A known term is also replaced where its usual translation appears ("runtime" → "running time"),
+					// keeping a capital first letter, like a model that follows the glossary.
+					const usual = target === 'en' && text.includes(src) ? EN[src] : undefined;
+					if (usual) out = out.replace(new RegExp(usual, 'gi'), (m) => (m[0] === m[0]!.toUpperCase() ? to[0]!.toUpperCase() + to.slice(1) : to));
+				}
 				return out;
 			};
 			const content = request.response_format

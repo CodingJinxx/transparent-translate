@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transparent Translate for Obsidian</title>
+<meta name="description" content="An Obsidian plugin: write notes in any mix of German and English, then read them in either language with one click. The file on disk never changes.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="hero">
+	<img class="hero-icon" src="icon.svg" width="96" height="96" alt="">
+	<h1>Transparent Translate</h1>
+	<p class="tagline">Write your Obsidian notes in any mix of German and English, then read them in either language with one click. <strong>The file on disk never changes.</strong></p>
+	<p class="actions">
+		<a class="button primary" href="https://github.com/CodingJinxx/transparent-translate/releases/latest">Download the latest release</a>
+		<a class="button" href="https://github.com/CodingJinxx/transparent-translate">Source on GitHub</a>
+	</p>
+</header>
+
+<main id="main">
+	<section class="demo" aria-labelledby="demo-title">
+		<h2 id="demo-title" class="visually-hidden">Demo</h2>
+		<figure>
+			<picture>
+				<source srcset="reading-english.png" media="(prefers-reduced-motion: reduce)">
+				<img id="demo" src="demo.gif" width="720" height="570"
+					alt="Demo in Obsidian: a German lecture note switches to English and then to German with a short decode animation. In Live Preview, clicking a translated sentence opens the original for editing. A right-click on a sentence opens Fix translation, where the term Laufzeit is set to running time and every sentence with that term updates. Finally the file explorer shows the folder Informatik as Computer science and the note Lektion 1 as Lesson 1, without renaming anything.">
+			</picture>
+			<figcaption>
+				Recorded in a real Obsidian with a mock translator, 40 seconds.
+				<a href="demo.gif">Open the animation on its own</a>.
+			</figcaption>
+		</figure>
+		<div class="music" id="music" hidden>
+			<button type="button" id="music-toggle" class="button" aria-pressed="false">Play music</button>
+			<p class="music-note">Off unless you turn it on. Starting it restarts the demo, so each scene begins on a bar of the music.</p>
+			<audio id="theme" loop preload="none">
+				<source src="theme.ogg" type="audio/ogg; codecs=opus">
+				<source src="theme.mp3" type="audio/mpeg">
+			</audio>
+		</div>
+	</section>
+
+	<section aria-labelledby="features-title">
+		<h2 id="features-title">What it does</h2>
+		<ul class="features">
+			<li><h3>Display only</h3><p>Original, English and German are views. A mode switch or a translation never rewrites your Markdown, so search, backlinks and sync keep seeing what you wrote.</p></li>
+			<li><h3>Mixed-language notes</h3><p>Sentences are translated one by one, so a paragraph that switches language halfway comes out fully in the target language.</p></li>
+			<li><h3>Syntax stays intact</h3><p>Links, embeds, tags, math, code, footnotes and frontmatter are protected and never sent for rewriting.</p></li>
+			<li><h3>Edit in translated views</h3><p>Click a translated sentence to edit it, in Reading view or Live Preview. Every change is a normal editor change that undo reverts.</p></li>
+			<li><h3>A glossary that learns</h3><p>Fix a term once from the right-click menu and it applies to every sentence that contains it, per note, folder, tag or vault.</p></li>
+			<li><h3>File and folder names</h3><p>Optionally show translated names in the explorer, tabs and titles. Nothing is ever renamed.</p></li>
+			<li><h3>Bring your own model</h3><p>Any OpenAI-compatible endpoint: a local server such as LM Studio, or a cloud provider. Each sentence is translated once and cached in your vault.</p></li>
+			<li><h3>Works on mobile</h3><p>Phones and tablets show translations made on a desktop and synced. They never call an API and need no key.</p></li>
+		</ul>
+		<figure class="stills">
+			<img src="demo-fix-translation.png" width="960" height="702" loading="lazy" alt="The Fix translation dialog with the original sentence, its translation, the selected term Laufzeit and the replacement running time.">
+			<img src="demo-file-names.png" width="960" height="702" loading="lazy" alt="The file explorer shows the folder Informatik as Computer science and the note Lektion 1 as Lesson 1, next to the note in English.">
+		</figure>
+	</section>
+
+	<section aria-labelledby="install-title">
+		<h2 id="install-title">Install</h2>
+		<p>Requires Obsidian 1.11.4 or later.</p>
+		<h3>From Obsidian</h3>
+		<p>Once the plugin is listed in the community directory: <b>Settings → Community plugins → Browse</b>, search for "Transparent Translate", then <b>Install</b> and <b>Enable</b>.</p>
+		<h3>Manually</h3>
+		<ol>
+			<li>Download <code>main.js</code>, <code>manifest.json</code> and <code>styles.css</code> from the <a href="https://github.com/CodingJinxx/transparent-translate/releases/latest">latest release</a>.</li>
+			<li>Copy them to <code>&lt;your vault&gt;/.obsidian/plugins/transparent-translate/</code>.</li>
+			<li>Reload Obsidian and enable <b>Transparent Translate</b> under <b>Settings → Community plugins</b>.</li>
+		</ol>
+		<h3>Set up</h3>
+		<p>Open <b>Settings → Transparent Translate</b>, pick a provider (LM Studio, OpenAI, OpenRouter, Meta Model API or any OpenAI-compatible endpoint), choose a model and select <b>Test</b>. Then open a note and select the language button in its header.</p>
+		<p class="note"><b>Privacy:</b> when you switch a note to English or German, the text of its sentences is sent to the endpoint you configure, and only there. With a local server nothing leaves your computer. The plugin has no telemetry. See <a href="https://github.com/CodingJinxx/transparent-translate#privacy-and-network-use">Privacy and network use</a>.</p>
+	</section>
+</main>
+
+<footer>
+	<p><a href="https://github.com/CodingJinxx/transparent-translate">Transparent Translate</a> by Jay Leimer, MIT license. Not affiliated with Obsidian.</p>
+	<p>Music: an original loop written for this page in <a href="https://strudel.cc">Strudel</a> (AGPL-3.0) and rendered with its export, using only its built-in oscillators and noise, no samples. The pattern is in <a href="https://github.com/CodingJinxx/transparent-translate/blob/main/docs/showcase.md">docs/showcase.md</a>; the loop is MIT licensed like the rest of the repository.</p>
+	<p>This page loads nothing from other sites, sets no cookies and has no analytics.</p>
+</footer>
+
+<script src="music.js"></script>
+</body>
+</html>
