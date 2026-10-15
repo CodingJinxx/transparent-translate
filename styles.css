@@ -6,8 +6,9 @@
 
 /* ---- Header action and status bar ---- */
 
-.tt-hidden {
-	display: none !important;
+.view-action.tt-hidden,
+.status-bar-item.tt-hidden {
+	display: none;
 }
 
 .view-action.tt-header-action.is-translated {
@@ -64,14 +65,12 @@
 
 .tt-failed,
 .markdown-rendered .tt-failed {
-	text-decoration: underline dotted var(--text-error);
-	text-underline-offset: 3px;
+	border-bottom: 1px dotted var(--text-error);
 }
 
 .tt-missing,
 .markdown-rendered .tt-missing {
-	text-decoration: underline dotted var(--text-faint);
-	text-underline-offset: 3px;
+	border-bottom: 1px dotted var(--text-faint);
 }
 
 /* ---- Translated sentences in Live Preview ---- */
