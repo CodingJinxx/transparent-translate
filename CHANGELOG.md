@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- Funding link (Buy Me a Coffee) in `manifest.json`, the README, the website and GitHub's Sponsor button. The manifest entry reaches users with the next release.
+
 ## [0.4.4] - 2026-10-15
 
 ### Added
