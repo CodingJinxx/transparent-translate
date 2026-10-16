@@ -63,7 +63,7 @@ Replaced and deleted originals are also kept in a short history, so **Restore re
 
 ### From Obsidian
 
-Once the plugin is listed in the community directory: **Settings → Community plugins → Browse**, search for "Transparent Translate", then **Install** and **Enable**.
+Transparent Translate is in the community directory: **Settings → Community plugins → Browse**, search for "Transparent Translate", then **Install** and **Enable**. Updates arrive through **Community plugins → Check for updates**.
 
 ### Manually
 
