@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+
+- README and website: installation now points to the community directory, where the plugin is listed.
+
 ## [0.4.5] - 2026-10-16
 
 ### Fixed
