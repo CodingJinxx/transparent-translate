@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Fixed
+
+- A translation cache file on disk could be hidden behind a new empty cache (and then overwritten) when an entry was stored for a note before its cache had been read. The file is now always read and merged first.
+
 ### Added
 
 - Funding link (Buy Me a Coffee) in `manifest.json`, the README, the website and GitHub's Sponsor button. The manifest entry reaches users with the next release. The website now shows the Buy Me a Coffee button widget (the only script it loads from another site).

@@ -37,6 +37,12 @@ type Listener = (notePath: string) => void;
 export class CacheStore {
 	private readonly caches = new Map<string, CacheFile>();
 	private readonly loading = new Map<string, Promise<CacheFile>>();
+	/**
+	 * Notes whose cache file has been read (or replaced by what is on disk). A cache that
+	 * `ensure()` created for a first `put()` is in `caches` but not here, so the file on disk
+	 * is still merged in instead of being hidden behind a new empty cache and overwritten.
+	 */
+	private readonly fromDisk = new Set<string>();
 	private readonly timers = new Map<string, number>();
 	/** Last content this store wrote per cache path, to recognize its own modify events. */
 	private readonly written = new Map<string, string>();
@@ -68,12 +74,12 @@ export class CacheStore {
 	}
 
 	isLoaded(notePath: string): boolean {
-		return this.caches.has(notePath);
+		return this.fromDisk.has(notePath);
 	}
 
 	/** Loads the cache of a note (once). Missing or unreadable files yield an empty cache. */
 	load(notePath: string): Promise<CacheFile> {
-		const loaded = this.caches.get(notePath);
+		const loaded = this.fromDisk.has(notePath) ? this.caches.get(notePath) : undefined;
 		if (loaded) return Promise.resolve(loaded);
 		const pending = this.loading.get(notePath);
 		if (pending) return pending;
@@ -92,6 +98,7 @@ export class CacheStore {
 				cache.replacedOriginals.push(...raced.replacedOriginals);
 			}
 			this.caches.set(notePath, cache);
+			this.fromDisk.add(notePath);
 			this.loading.delete(notePath);
 			return cache;
 		})();
@@ -214,6 +221,7 @@ export class CacheStore {
 			this.caches.set(notePath, parseCache(content));
 		}
 		this.written.set(path, content);
+		this.fromDisk.add(notePath);
 		this.emit(notePath);
 		return true;
 	}
@@ -225,6 +233,7 @@ export class CacheStore {
 			window.clearTimeout(timer);
 			this.timers.delete(oldPath);
 		}
+		const wasFromDisk = this.fromDisk.delete(oldPath);
 		this.caches.delete(oldPath);
 		const from = this.cachePath(oldPath);
 		const to = this.cachePath(newPath);
@@ -235,6 +244,7 @@ export class CacheStore {
 		}
 		if (cache) {
 			this.caches.set(newPath, cache);
+			if (wasFromDisk) this.fromDisk.add(newPath);
 			if (timer) this.scheduleSave(newPath);
 		}
 	}
@@ -244,6 +254,7 @@ export class CacheStore {
 		if (timer) window.clearTimeout(timer);
 		this.timers.delete(notePath);
 		this.caches.delete(notePath);
+		this.fromDisk.delete(notePath);
 		const path = this.cachePath(notePath);
 		this.written.delete(path);
 		try {
@@ -259,6 +270,7 @@ export class CacheStore {
 		for (const timer of this.timers.values()) window.clearTimeout(timer);
 		this.timers.clear();
 		this.caches.clear();
+		this.fromDisk.clear();
 		this.loading.clear();
 		this.written.clear();
 	}
