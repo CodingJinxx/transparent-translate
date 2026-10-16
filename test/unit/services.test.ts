@@ -231,3 +231,36 @@ describe('TranslationService', () => {
 		expect(translator!.calls).toHaveLength(2);
 	});
 });
+
+describe('CacheStore: entries put before the cache file was read', () => {
+	it('merges the cache file on disk instead of hiding it behind a new empty cache', async () => {
+		const { backend, store } = setup();
+		const onDisk = emptyCache();
+		onDisk.sentences['d'.repeat(64)] = { en: 'From disk' };
+		backend.files.set('_Translations/Notes/a.md', serializeCache(onDisk));
+
+		// A put (or an edit-session replacement) can happen before anything asked for this note's cache.
+		store.put('Notes/a.md', 'a'.repeat(64), 'en', 'New');
+		expect(store.isLoaded('Notes/a.md')).toBe(false);
+
+		const cache = await store.load('Notes/a.md');
+		expect(cache.sentences['d'.repeat(64)]).toMatchObject({ en: 'From disk' });
+		expect(cache.sentences['a'.repeat(64)]).toMatchObject({ en: 'New' });
+		expect(store.isLoaded('Notes/a.md')).toBe(true);
+
+		// Saving must not drop what was on disk.
+		await flush();
+		const saved = parseCache(backend.files.get('_Translations/Notes/a.md')!);
+		expect(Object.keys(saved.sentences).sort()).toEqual(['a'.repeat(64), 'd'.repeat(64)]);
+	});
+
+	it('keeps a newer local entry over the one on disk when merging', async () => {
+		const { backend, store } = setup();
+		const onDisk = emptyCache();
+		onDisk.sentences['a'.repeat(64)] = { en: 'Old' };
+		backend.files.set('_Translations/Notes/a.md', serializeCache(onDisk));
+		store.put('Notes/a.md', 'a'.repeat(64), 'en', 'New');
+		const cache = await store.load('Notes/a.md');
+		expect(cache.sentences['a'.repeat(64)]).toMatchObject({ en: 'New' });
+	});
+});
