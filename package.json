@@ -1,6 +1,6 @@
 {
 	"name": "transparent-translate",
-	"version": "0.4.4",
+	"version": "0.4.5",
 	"description": "Switch the display of a note between Original, English and German without ever changing the file on disk.",
 	"main": "main.js",
 	"type": "module",

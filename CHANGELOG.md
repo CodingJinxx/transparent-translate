@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.4.5] - 2026-10-16
+
 ### Fixed
 
 - A translation cache file on disk could be hidden behind a new empty cache (and then overwritten) when an entry was stored for a note before its cache had been read. The file is now always read and merged first.
@@ -116,7 +118,8 @@ First release.
 - View-only mode on mobile (no requests, no key).
 - English and German interface.
 
-[Unreleased]: https://github.com/CodingJinxx/transparent-translate/compare/0.4.4...HEAD
+[Unreleased]: https://github.com/CodingJinxx/transparent-translate/compare/0.4.5...HEAD
+[0.4.5]: https://github.com/CodingJinxx/transparent-translate/compare/0.4.4...0.4.5
 [0.4.4]: https://github.com/CodingJinxx/transparent-translate/compare/0.4.3...0.4.4
 [0.4.3]: https://github.com/CodingJinxx/transparent-translate/compare/0.4.2...0.4.3
 [0.4.2]: https://github.com/CodingJinxx/transparent-translate/compare/0.4.1...0.4.2
