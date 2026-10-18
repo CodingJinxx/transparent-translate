@@ -82,10 +82,11 @@ describe('estimate', () => {
 });
 
 describe('modes and providers', () => {
-	it('cycles Original → English → German', () => {
+	it('cycles Original → English → German → Dutch', () => {
 		expect(nextMode('original')).toBe('en');
 		expect(nextMode('en')).toBe('de');
-		expect(nextMode('de')).toBe('original');
+		expect(nextMode('de')).toBe('nl');
+		expect(nextMode('nl')).toBe('original');
 	});
 
 	it('finds presets', () => {
@@ -102,5 +103,13 @@ describe('modes and providers', () => {
 		expect(parseExtraBody('')).toEqual({});
 		expect(parseExtraBody('[1]')).toBeNull();
 		expect(parseExtraBody('{bad')).toBeNull();
+	});
+});
+
+describe('Dutch target', () => {
+	it('names Dutch as the target language in the prompts', () => {
+		const [system, user] = buildMessages([{ id: 1, text: 'Guten Morgen.' }], 'nl', { noteTitle: '', glossary: [], jsonMode: false });
+		expect(system?.content).toContain('into Dutch');
+		expect(user?.content).toContain('Target language: Dutch');
 	});
 });

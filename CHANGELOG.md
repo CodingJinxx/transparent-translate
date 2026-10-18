@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- Dutch as a third target language: **Show Dutch**, **Show file and folder names in Dutch**, a `NL` entry in the status bar and cycle, and Dutch in the default language, glossary and bulk-translate choices. The interface stays English and German. Existing caches stay valid; Dutch translations are added next to the English and German ones.
+
 ### Changed
 
 - README and website: installation now points to the community directory, where the plugin is listed.

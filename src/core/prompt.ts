@@ -29,6 +29,7 @@ export interface PromptContext {
 export const LANGUAGE_NAMES: Record<TargetLanguage, string> = {
 	en: 'English',
 	de: 'German',
+	nl: 'Dutch',
 };
 
 export function systemPrompt(target: TargetLanguage, jsonMode: boolean, hasTerms = false): string {

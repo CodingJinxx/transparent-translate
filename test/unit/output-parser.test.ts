@@ -56,6 +56,10 @@ describe('source language tags', () => {
 		});
 	});
 
+	it('accepts Dutch as a reported language', () => {
+		expect(parseNumberedOutput('<<1>> {nl} Hallo.', 1)).toMatchObject({ texts: ['Hallo.'], langs: ['nl'] });
+	});
+
 	it('reads {lang, text} objects in JSON output', () => {
 		expect(parseJsonOutput('{"translations": [{"lang": "de", "text": "Hi"}, "{en} Yo", "plain"]}', 3)).toEqual({
 			ok: true,

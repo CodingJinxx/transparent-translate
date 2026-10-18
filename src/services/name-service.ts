@@ -205,7 +205,7 @@ export class NameService {
 					const same = normalizeSentence(text) === normalizeSentence(b.stem);
 					const lang = refineLanguage(item.lang, b.stem) ?? (same ? target : undefined);
 					// The original is the display text for its own language: no request needed later.
-					if ((lang === 'en' || lang === 'de') && lang !== target) this.deps.store.put(b.hash, b.stem, lang, b.stem);
+					if (lang && lang !== 'mixed' && lang !== target) this.deps.store.put(b.hash, b.stem, lang, b.stem);
 					this.deps.store.put(b.hash, b.stem, target, lang === target ? b.stem : text, { model: result.model, translatedAt, ...(lang ? { lang } : {}) });
 					outcome.translated++;
 				} else {

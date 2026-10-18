@@ -1,4 +1,5 @@
-import type { TargetLanguage } from './types';
+import { isSourceLanguage } from './language';
+import { TARGET_LANGUAGES, type TargetLanguage } from './types';
 import { CACHE_WARNING } from './cache-format';
 
 /**
@@ -10,12 +11,10 @@ import { CACHE_WARNING } from './cache-format';
 export const NAMES_VERSION = 1;
 export const NAMES_FILE = '_names.md';
 
-export interface NameEntry {
+export interface NameEntry extends Partial<Record<TargetLanguage, string>> {
 	/** The original name, for debugging and as a sanity check on read. */
 	src: string;
 	lang?: TargetLanguage | 'mixed';
-	en?: string;
-	de?: string;
 	model?: string;
 	translatedAt?: string;
 }
@@ -47,9 +46,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function sanitizeEntry(value: unknown): NameEntry | null {
 	if (!isRecord(value) || typeof value.src !== 'string') return null;
 	const entry: NameEntry = { src: value.src };
-	if (value.lang === 'en' || value.lang === 'de' || value.lang === 'mixed') entry.lang = value.lang;
-	if (typeof value.en === 'string') entry.en = value.en;
-	if (typeof value.de === 'string') entry.de = value.de;
+	if (isSourceLanguage(value.lang)) entry.lang = value.lang;
+	for (const language of TARGET_LANGUAGES) {
+		const text = value[language];
+		if (typeof text === 'string') entry[language] = text;
+	}
 	if (typeof value.model === 'string') entry.model = value.model;
 	if (typeof value.translatedAt === 'string') entry.translatedAt = value.translatedAt;
 	return entry;

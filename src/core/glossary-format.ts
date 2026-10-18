@@ -1,4 +1,4 @@
-import type { TargetLanguage } from './types';
+import { isTargetLanguage, type TargetLanguage } from './types';
 
 /**
  * Format of the translation glossary note (default `Translation glossary.md`).
@@ -144,7 +144,7 @@ function sanitizeEntry(value: unknown): GlossaryEntry | null {
 	const kind = value.kind;
 	if (kind !== 'map' && kind !== 'avoid' && kind !== 'keep') return null;
 	if (typeof value.src !== 'string' || value.src.trim().length === 0) return null;
-	const target = value.target === 'en' || value.target === 'de' ? value.target : '*';
+	const target = isTargetLanguage(value.target) ? value.target : '*';
 	const entry: GlossaryEntry = { kind, src: cleanText(value.src, MAX_SRC), target, scope: sanitizeScope(value.scope), updatedAt };
 	if (kind === 'map') {
 		if (typeof value.to !== 'string' || value.to.trim().length === 0) return null;

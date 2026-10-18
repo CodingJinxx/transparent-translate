@@ -1,6 +1,6 @@
 ## Willkommen
 
-Transparent Translate zeigt jede Notiz im **Original**, auf **Englisch** oder auf **Deutsch**. Es ändert nur, was du *siehst*: Die Datei auf der Festplatte wird durch einen Sprachwechsel oder eine Übersetzung nie umgeschrieben.
+Transparent Translate zeigt jede Notiz im **Original**, auf **Englisch**, auf **Deutsch** oder auf **Niederländisch**. Es ändert nur, was du *siehst*: Die Datei auf der Festplatte wird durch einen Sprachwechsel oder eine Übersetzung nie umgeschrieben.
 
 - Übersetzungen kommen von einem Sprachmodell deiner Wahl (lokal, etwa LM Studio, oder ein Dienst wie OpenAI, OpenRouter oder die Meta Model API).
 - Notizen werden Satz für Satz übersetzt, und zwar erst, wenn du eine Notiz auf eine andere Sprache umschaltest. Jeder Satz wird einmal übersetzt und dann zwischengespeichert.
@@ -20,8 +20,8 @@ Bei einem Reasoning-Modell trage unter **Zusätzliche Anfrageparameter** `{"reas
 
 ## Sprache einer Notiz wechseln
 
-- Wähle den **Sprachknopf** im Notizkopf oder den Eintrag `OG · EN · DE` in der Statusleiste, um durch Original, Englisch und Deutsch zu schalten.
-- Oder führe **Original anzeigen**, **Englisch anzeigen** oder **Deutsch anzeigen** in der Befehlspalette aus.
+- Wähle den **Sprachknopf** im Notizkopf oder den Eintrag `OG · EN · DE · NL` in der Statusleiste, um durch Original, Englisch, Deutsch und Niederländisch zu schalten.
+- Oder führe **Original anzeigen**, **Englisch anzeigen** oder **Deutsch anzeigen** oder **Niederländisch anzeigen** in der Befehlspalette aus.
 - Der erste Wechsel fordert die Übersetzungen der Notiz an; spätere Wechsel sind sofort da, weil alles zwischengespeichert ist.
 - Sätze, die bereits in der Zielsprache sind, werden erkannt und nie gesendet.
 - Ein Satz, der gerade übersetzt wird, hat eine gepunktete Unterstreichung. Rot gepunktet heißt: Die Übersetzung ist fehlgeschlagen; fahre darüber, um den Grund zu sehen.
@@ -81,7 +81,7 @@ Unter **Einstellungen → Transparent Translate → Datei- und Ordnernamen** (od
 
 ## Auf dem Handy
 
-Auf dem Handy ist das Plugin **nur zum Ansehen**: Du schaltest zwischen Original, Englisch und Deutsch um und liest die Übersetzungen, die auf einem Computer erzeugt und synchronisiert wurden. Sätze ohne Übersetzung im Cache bleiben im Original. Es gibt keine Anfragen und keinen Schlüssel. Begriffe im Glossar kannst du trotzdem korrigieren; die neuen Übersetzungen erscheinen, sobald ein Computer sie aktualisiert hat.
+Auf dem Handy ist das Plugin **nur zum Ansehen**: Du schaltest zwischen Original, Englisch, Deutsch und Niederländisch um und liest die Übersetzungen, die auf einem Computer erzeugt und synchronisiert wurden. Sätze ohne Übersetzung im Cache bleiben im Original. Es gibt keine Anfragen und keinen Schlüssel. Begriffe im Glossar kannst du trotzdem korrigieren; die neuen Übersetzungen erscheinen, sobald ein Computer sie aktualisiert hat.
 
 ## Datenschutz und Kosten
 
@@ -105,10 +105,10 @@ Auf dem Handy ist das Plugin **nur zum Ansehen**: Du schaltest zwischen Original
 
 Kein Befehl hat eine Standard-Tastenkombination: Lege eigene unter **Einstellungen → Tastenkombinationen** fest.
 
-- **Original / Englisch / Deutsch anzeigen**, **Anzeigesprache wechseln**
+- **Original / Englisch / Deutsch / Niederländisch anzeigen**, **Anzeigesprache wechseln**
 - **Diese Notiz neu übersetzen**, **Ordner übersetzen…**
 - **Übersetzung eines Satzes korrigieren …**, **Begriffe dieser Notiz prüfen …**, **Übersetzungsglossar verwalten**, **Von Glossaränderungen betroffene Übersetzungen aktualisieren**
-- **Datei- und Ordnernamen im Original / auf Englisch / auf Deutsch anzeigen**
+- **Datei- und Ordnernamen im Original / auf Englisch / auf Deutsch / auf Niederländisch anzeigen**
 - **Originaltext kopieren**, **Ersetztes Original wiederherstellen…**
 - **Übersetzungs-Cache dieser Notiz leeren**, **Gesamten Übersetzungs-Cache leeren**, **Ungenutzte Übersetzungen entfernen**
 - **Benutzeranleitung öffnen**

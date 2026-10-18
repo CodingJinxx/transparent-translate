@@ -10,7 +10,7 @@ import { isSourceLanguage, type SourceLanguage } from './language';
 export type ParseResult = { ok: true; texts: string[]; langs: Array<SourceLanguage | undefined> } | { ok: false; reason: string };
 
 /** `{de}`, also `[de]` and `de:` from models that do not copy the braces. */
-const LANG_TAG = /^(?:\{\s*(en|de|mixed)\s*\}|\[\s*(en|de|mixed)\s*\]|(en|de|mixed):)\s*/i;
+const LANG_TAG = /^(?:\{\s*(en|de|nl|mixed)\s*\}|\[\s*(en|de|nl|mixed)\s*\]|(en|de|nl|mixed):)\s*/i;
 
 /** Splits an optional `{de}` source-language tag off the front of a translation. */
 function splitLangTag(text: string): { text: string; lang: SourceLanguage | undefined } {

@@ -24,7 +24,7 @@
 | --- | --- |
 | ![A German lecture note with a formula, a list, a table and a callout](docs/images/reading-original.png) | ![The same note displayed in English; formula, links and tags are unchanged](docs/images/reading-english.png) |
 
-Transparent Translate adds a language switch to every note: **Original → English → German**. Translations are made by any OpenAI-compatible LLM (a local server such as LM Studio, or a cloud provider), cached sentence by sentence in your vault, and shown on top of your text. Search, backlinks, sync and other tools keep seeing exactly what you wrote.
+Transparent Translate adds a language switch to every note: **Original → English → German → Dutch**. Translations are made by any OpenAI-compatible LLM (a local server such as LM Studio, or a cloud provider), cached sentence by sentence in your vault, and shown on top of your text. Search, backlinks, sync and other tools keep seeing exactly what you wrote.
 
 ## Features
 
@@ -82,7 +82,7 @@ Requires Obsidian **1.11.4** or later (the API key is kept in Obsidian's secret 
 5. Select **Test**. It translates "Guten Morgen" and shows the result, latency and token usage.
 6. Optional: select **Add exclusion** to hide the cache folder from search and the graph.
 
-Then open a note and select the language button in the note header (or the `OG · EN · DE` item in the status bar), or run **Show English** / **Show German** from the command palette. Nothing is translated until you switch a note.
+Then open a note and select the language button in the note header (or the `OG · EN · DE · NL` item in the status bar), or run **Show English** / **Show German** / **Show Dutch** from the command palette. Nothing is translated until you switch a note.
 
 | Provider preset | Base URL |
 | --- | --- |
@@ -101,9 +101,9 @@ No command has a default hotkey; bind your own under **Settings → Hotkeys**.
 
 | Command | |
 | --- | --- |
-| Show original / Show English / Show German | Set the display language of the current note. |
-| Cycle display language | Original → English → German. |
-| Show file and folder names in original / English / German | Sets the language of names in the explorer, tabs and titles. Off by default. |
+| Show original / Show English / Show German / Show Dutch | Set the display language of the current note. |
+| Cycle display language | Original → English → German → Dutch. |
+| Show file and folder names in original / English / German / Dutch | Sets the language of names in the explorer, tabs and titles. Off by default. |
 | Open user guide | Opens the guide inside Obsidian. |
 | Fix the translation of a sentence… | Pick a translated sentence and correct a term (also available from the right-click menu of a translated sentence). |
 | Review terms in this note… | Asks the model which terms were a judgment call and lets you settle them. |
@@ -119,7 +119,7 @@ No command has a default hotkey; bind your own under **Settings → Hotkeys**.
 ## Privacy and network use
 
 > [!IMPORTANT]
-> **Note text is sent to the endpoint you configure.** When a note is switched to English or German (or a folder is bulk-translated), the text of its sentences, the note title and your glossary are sent to that endpoint for translation. With **File and folder names** turned on, the names that are visible in the explorer, tabs and titles (without extension) and the folder they are in are sent as well. Glossary entries, subject areas and meanings are sent only together with the sentences they match. Links, code, math, tags and other protected syntax are replaced by placeholders before sending. Frontmatter and code blocks are never sent.
+> **Note text is sent to the endpoint you configure.** When a note is switched to English, German or Dutch (or a folder is bulk-translated), the text of its sentences, the note title and your glossary are sent to that endpoint for translation. With **File and folder names** turned on, the names that are visible in the explorer, tabs and titles (without extension) and the folder they are in are sent as well. Glossary entries, subject areas and meanings are sent only together with the sentences they match. Links, code, math, tags and other protected syntax are replaced by placeholders before sending. Frontmatter and code blocks are never sent.
 
 - **Which service:** only the OpenAI-compatible endpoint you enter in the settings (for example the Meta Model API, OpenAI, OpenRouter, or a local server like LM Studio). With a local server, nothing leaves your computer. Which provider and plan you use, and what their terms allow, is your decision.
 - **Account and payment:** a cloud provider needs an account and usually charges per token. Local servers need neither.
@@ -158,14 +158,14 @@ Models pick plausible but wrong words for domain terms (a German *Schein* is not
 
 ## Mobile
 
-On Obsidian mobile the plugin is **view-only**: switch between Original, English and German and read translations that already exist in the synced cache. Sentences without a cached translation are shown in the original language with a dotted underline. No requests are made, no key is needed, and editing works as usual in Original mode.
+On Obsidian mobile the plugin is **view-only**: switch between Original, English, German and Dutch and read translations that already exist in the synced cache. Sentences without a cached translation are shown in the original language with a dotted underline. No requests are made, no key is needed, and editing works as usual in Original mode.
 
 ## Limitations
 
 - Search, backlinks and other plugins only see the original text.
 - If the translation endpoint cannot be reached, a note that has no translation yet is not switched (a notice says why). Notes that are already translated still switch, because everything they need is in the cache.
 - Translated names are a display layer: the quick switcher, search, graph, links and the explorer's sort order keep using the real names, so translated rows can look unsorted. If two siblings would show the same translated name, both keep their original.
-- Translation is between English and German.
+- Notes are expected in German and English. Dutch is a target language only: Dutch text in a note is not detected as a source language, and the interface is available in English and German only.
 - In Live Preview, translations are shown sentence by sentence inside paragraphs, headings and lists. Tables and callouts are translated in Reading view.
 - Sentence splitting uses `Intl.Segmenter` plus an abbreviation list (configurable). Unusual punctuation can split or join sentences differently than you would.
 - If a model changes or drops placeholders, that sentence is retried once and otherwise shown in the original language, with a dotted red underline.

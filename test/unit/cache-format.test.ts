@@ -22,6 +22,12 @@ describe('cache format', () => {
 		expect(parseCache(text)).toEqual(cache);
 	});
 
+	it('stores Dutch translations and glossary signatures', () => {
+		const cache = emptyCache();
+		cache.sentences[H1] = { lang: 'en', nl: 'Hallo ⟦1⟧', gl: { nl: 'abc' } };
+		expect(parseCache(serializeCache(cache))).toEqual(cache);
+	});
+
 	it('never contains link or tag syntax for stored placeholder translations', () => {
 		const cache = emptyCache();
 		cache.sentences[H1] = { en: 'See ⟦1⟧ and ⟦2⟧.' };

@@ -42,7 +42,7 @@ const activeLabels = (): Promise<{ tab: string; header: string; inline: string; 
 		};
 	});
 
-const setNameMode = (mode: 'original' | 'en' | 'de'): Promise<void> =>
+const setNameMode = (mode: 'original' | 'en' | 'de' | 'nl'): Promise<void> =>
 	browser.executeObsidianCommand(`${PLUGIN}:names-${mode === 'original' ? 'original' : mode === 'en' ? 'english' : 'german'}`);
 
 /** Opens the explorer and unfolds the folder of `path`. */

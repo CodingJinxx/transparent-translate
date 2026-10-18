@@ -1,6 +1,6 @@
 ## Welcome
 
-Transparent Translate shows any note in **Original**, **English** or **German**. It only changes what you *see*: the file on disk is never rewritten by a language switch or a translation.
+Transparent Translate shows any note in **Original**, **English**, **German** or **Dutch**. It only changes what you *see*: the file on disk is never rewritten by a language switch or a translation.
 
 - Translations come from a language model you choose (a local one such as LM Studio, or a service such as OpenAI, OpenRouter or the Meta Model API).
 - Notes are translated sentence by sentence and only when you switch a note to another language. Each sentence is translated once and then cached.
@@ -20,8 +20,8 @@ If you use a reasoning model, add `{"reasoning_effort": "low"}` under **Extra re
 
 ## Switch the language of a note
 
-- Select the **language button** in the note header, or the `OG · EN · DE` item in the status bar, to cycle through Original, English and German.
-- Or run **Show original**, **Show English** or **Show German** from the command palette.
+- Select the **language button** in the note header, or the `OG · EN · DE · NL` item in the status bar, to cycle through Original, English, German and Dutch.
+- Or run **Show original**, **Show English**, **Show German** or **Show Dutch** from the command palette.
 - The first switch requests the translations of the note; later switches are instant, because everything is cached.
 - Sentences that are already in the target language are recognised and never sent.
 - While a sentence is being translated it has a dotted underline. A red dotted underline means the translation failed; hover it to see why.
@@ -81,7 +81,7 @@ Under **Settings → Transparent Translate → File and folder names** (or with 
 
 ## On your phone
 
-On mobile the plugin is **view-only**: switch between Original, English and German and read the translations that were generated on a computer and synced. Sentences without a cached translation stay in the original language. No requests are made and no key is needed. You can still fix terms in the glossary; the new translations appear once a computer has updated them.
+On mobile the plugin is **view-only**: switch between Original, English, German and Dutch and read the translations that were generated on a computer and synced. Sentences without a cached translation stay in the original language. No requests are made and no key is needed. You can still fix terms in the glossary; the new translations appear once a computer has updated them.
 
 ## Privacy and cost
 
@@ -105,10 +105,10 @@ On mobile the plugin is **view-only**: switch between Original, English and Germ
 
 No command has a default hotkey: bind your own under **Settings → Hotkeys**.
 
-- **Show original / Show English / Show German**, **Cycle display language**
+- **Show original / Show English / Show German / Show Dutch**, **Cycle display language**
 - **Re-translate this note**, **Translate folder…**
 - **Fix the translation of a sentence…**, **Review terms in this note…**, **Manage translation glossary**, **Update translations affected by glossary changes**
-- **Show file and folder names in original / English / German**
+- **Show file and folder names in original / English / German / Dutch**
 - **Copy original text**, **Restore replaced original…**
 - **Clear translation cache for this note**, **Clear the entire translation cache**, **Prune unused translations**
 - **Open user guide**

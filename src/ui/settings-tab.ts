@@ -131,6 +131,7 @@ export class TransparentTranslateSettingTab extends PluginSettingTab {
 						.addOption('original', t('mode.original'))
 						.addOption('en', t('mode.en'))
 						.addOption('de', t('mode.de'))
+						.addOption('nl', t('mode.nl'))
 						.setValue(this.settings.defaultMode)
 						.onChange(async (value) => {
 							this.settings.defaultMode = value as DisplayMode;
@@ -169,6 +170,7 @@ export class TransparentTranslateSettingTab extends PluginSettingTab {
 						.addOption('original', t('mode.original'))
 						.addOption('en', t('mode.en'))
 						.addOption('de', t('mode.de'))
+						.addOption('nl', t('mode.nl'))
 						.setValue(this.settings.nameMode)
 						.onChange((value) => this.plugin.setNameMode(value as DisplayMode)),
 				),

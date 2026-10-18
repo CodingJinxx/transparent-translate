@@ -120,6 +120,7 @@ export class GlossaryModal extends Modal {
 				.addOption('*', t('glossary.language.both'))
 				.addOption('en', t('mode.en'))
 				.addOption('de', t('mode.de'))
+				.addOption('nl', t('mode.nl'))
 				.setValue(this.target)
 				.onChange((value) => (this.target = value as TargetLanguage | '*')),
 		);

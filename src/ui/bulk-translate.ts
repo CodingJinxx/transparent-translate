@@ -1,7 +1,7 @@
 import { FuzzySuggestModal, Modal, Notice, Setting, type TFile, type TFolder } from 'obsidian';
 import { estimateCost } from '../core/estimate';
 import { isInFolder } from '../core/paths';
-import type { NoteModel, Sentence, TargetLanguage } from '../core/types';
+import { TARGET_LANGUAGES, type NoteModel, type Sentence, type TargetLanguage } from '../core/types';
 import { t } from '../i18n';
 import type TransparentTranslatePlugin from '../main';
 
@@ -56,7 +56,7 @@ export class BulkTranslateModal extends Modal {
 	}
 
 	private targets(): TargetLanguage[] {
-		return this.choice === 'both' ? ['en', 'de'] : [this.choice];
+		return this.choice === 'both' ? [...TARGET_LANGUAGES] : [this.choice];
 	}
 
 	override onOpen(): void {
@@ -67,6 +67,7 @@ export class BulkTranslateModal extends Modal {
 				.addOption('both', t('bulk.target-both'))
 				.addOption('en', t('mode.en'))
 				.addOption('de', t('mode.de'))
+				.addOption('nl', t('mode.nl'))
 				.setValue(this.choice)
 				.onChange((value) => {
 					this.choice = value as TargetChoice;

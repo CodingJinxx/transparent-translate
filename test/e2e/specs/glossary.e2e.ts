@@ -7,7 +7,7 @@ const CONTENT = ['Der Schein ist wichtig.', '', 'Hier steht ein anderer Satz.', 
 const GLOSSARY = 'Translation glossary.md';
 
 /** Sets the display language of the open note through the plugin (as the command does). */
-const setMode = (mode: 'original' | 'en' | 'de') =>
+const setMode = (mode: 'original' | 'en' | 'de' | 'nl') =>
 	browser.executeObsidian(({ app, obsidian, plugins }, m) => {
 		const view = app.workspace.getLeavesOfType('markdown').map((l) => l.view).find((v) => v instanceof obsidian.MarkdownView)!;
 		plugins.transparentTranslate.setMode(view.leaf, m);

@@ -12,7 +12,7 @@ const modeOfActive = () =>
 		return plugins.transparentTranslate.modeOf(view.leaf, view.file!.path);
 	});
 
-const switchTo = (mode: 'original' | 'en' | 'de') =>
+const switchTo = (mode: 'original' | 'en' | 'de' | 'nl') =>
 	browser.executeObsidian(({ app, obsidian, plugins }, m) => {
 		const view = app.workspace.getActiveViewOfType(obsidian.MarkdownView)!;
 		plugins.transparentTranslate.setMode(view.leaf, m);

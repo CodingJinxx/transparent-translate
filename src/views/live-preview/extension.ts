@@ -2,9 +2,9 @@ import { editorInfoField, editorLivePreviewField, Keymap, MarkdownView, Menu, No
 import { EditorState, Prec, StateField, type Extension, type Range, type Transaction } from '@codemirror/state';
 import { Decoration, EditorView, ViewPlugin, type DecorationSet, type ViewUpdate } from '@codemirror/view';
 import { composeRange } from '../../core/compose';
-import { isTargetLanguage, type DisplayMode, type TargetLanguage } from '../../core/types';
+import { isTargetLanguage, type DisplayMode } from '../../core/types';
 import type { TranslateHost } from '../../host';
-import { t } from '../../i18n';
+import { sourceLanguageLabel, sourceModeLabel, t } from '../../i18n';
 import {
 	ANIMATION_WINDOW_MS,
 	endSessionEffect,
@@ -23,11 +23,6 @@ import {
 } from './state';
 import { animationKey, claimAnimation } from '../decode-animation';
 import { SentenceWidget, SessionWidget, type SentenceWidgetHandlers, type SessionWidgetHandlers } from './widgets';
-
-/** The language a translated sentence was written in. With two languages, it is the other one. */
-function otherLanguage(target: TargetLanguage): TargetLanguage {
-	return target === 'en' ? 'de' : 'en';
-}
 
 function pathOf(state: EditorState): string | null {
 	return state.field(editorInfoField, false)?.file?.path ?? null;
@@ -143,11 +138,10 @@ export function createLivePreviewExtension(host: TranslateHost): Extension {
 
 		if (session) {
 			const target = session.target;
-			const source = otherLanguage(target);
 			const widget = Decoration.replace({
 				widget: new SessionWidget(
 					session,
-					{ source: t(`language.${source}`), sourceName: t(`mode.${source}`), target: t(`mode.${target}`) },
+					{ source: sourceLanguageLabel(target), sourceName: sourceModeLabel(target), target: t(`mode.${target}`) },
 					sessionHandlers,
 				),
 			});

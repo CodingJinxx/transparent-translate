@@ -1,21 +1,21 @@
+/** Languages the plugin can translate into. */
+export const TARGET_LANGUAGES = ['en', 'de', 'nl'] as const;
+export type TargetLanguage = (typeof TARGET_LANGUAGES)[number];
+
 /** Display modes. `original` shows the file as it is on disk. */
 export type DisplayMode = 'original' | TargetLanguage;
 
-/** Languages the plugin can translate into. */
-export type TargetLanguage = 'en' | 'de';
-
-export const TARGET_LANGUAGES: readonly TargetLanguage[] = ['en', 'de'];
-export const DISPLAY_MODES: readonly DisplayMode[] = ['original', 'en', 'de'];
+export const DISPLAY_MODES: readonly DisplayMode[] = ['original', ...TARGET_LANGUAGES];
 
 export function isTargetLanguage(value: unknown): value is TargetLanguage {
-	return value === 'en' || value === 'de';
+	return (TARGET_LANGUAGES as readonly unknown[]).includes(value);
 }
 
 export function isDisplayMode(value: unknown): value is DisplayMode {
 	return value === 'original' || isTargetLanguage(value);
 }
 
-/** Next mode in the cycle Original → English → German → Original. */
+/** Next mode in the cycle Original → English → German → Dutch → Original. */
 export function nextMode(mode: DisplayMode): DisplayMode {
 	const index = DISPLAY_MODES.indexOf(mode);
 	return DISPLAY_MODES[(index + 1) % DISPLAY_MODES.length] ?? 'original';

@@ -6,9 +6,9 @@ import { namesPath } from './core/names-format';
 import { isTranslatablePath, notePathForCache } from './core/paths';
 import { sentenceHash } from './core/text';
 import { protect } from './core/protect';
-import { isTargetLanguage, nextMode, type DisplayMode, type NoteModel, type TargetLanguage } from './core/types';
+import { DISPLAY_MODES, isTargetLanguage, nextMode, type DisplayMode, type NoteModel, type TargetLanguage } from './core/types';
 import type { TranslateHost } from './host';
-import { setLanguage, t } from './i18n';
+import { setLanguage, sourceLanguageLabel, t } from './i18n';
 import { log, setDebug } from './log';
 import { ModeManager } from './modes';
 import { VaultCacheBackend } from './obsidian/vault-backend';
@@ -414,7 +414,7 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 	recordDeletion(path: string, texts: string[], target: TargetLanguage, editorView: EditorView): void {
 		const now = new Date().toISOString();
 		for (const text of texts) this.store.addReplaced(path, { at: now, replacedWith: null, text });
-		const source = t(`language.${target === 'en' ? 'de' : 'en'}`);
+		const source = sourceLanguageLabel(target);
 		const message = texts.length === 1 ? t('notice.deleted-sentence', { language: source }) : t('notice.deleted-sentences', { count: texts.length, language: source });
 		const notice = new Notice('', 8000);
 		notice.setMessage(
@@ -433,7 +433,7 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 	}
 
 	confirmDelete(count: number, target: TargetLanguage): Promise<boolean> {
-		const source = t(`language.${target === 'en' ? 'de' : 'en'}`);
+		const source = sourceLanguageLabel(target);
 		return new ConfirmModal(this.app, {
 			title: t('confirm-delete.title'),
 			body: t('confirm-delete.body', { count, source }),
@@ -537,7 +537,7 @@ export default class TransparentTranslatePlugin extends Plugin implements Transl
 		el.empty();
 		const icon = el.createSpan({ cls: 'tt-status-icon' });
 		setIcon(icon, ICON_ID);
-		(['original', 'en', 'de'] as const).forEach((m, i) => {
+		DISPLAY_MODES.forEach((m, i) => {
 			if (i > 0) el.createSpan({ cls: 'tt-status-sep', text: '·' });
 			el.createSpan({ cls: m === mode ? 'tt-status-mode is-active' : 'tt-status-mode', text: t(`mode.short.${m}`) });
 		});

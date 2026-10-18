@@ -1,10 +1,10 @@
-import type { TargetLanguage } from './types';
+import { isTargetLanguage, type TargetLanguage } from './types';
 
 /** Language of an original sentence, as reported by the model or detected locally. */
 export type SourceLanguage = TargetLanguage | 'mixed';
 
 export function isSourceLanguage(value: unknown): value is SourceLanguage {
-	return value === 'en' || value === 'de' || value === 'mixed';
+	return value === 'mixed' || isTargetLanguage(value);
 }
 
 // Short, frequent function words. Words that exist in both languages

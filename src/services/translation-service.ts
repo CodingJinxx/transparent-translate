@@ -270,9 +270,7 @@ export class TranslationService {
 					// Already in the target language: keep the original wording, whatever the model wrote.
 					const text = lang === target ? s.masked : item.text;
 					// The original is the display text for its own language: no request needed later.
-					if (lang === 'en' || lang === 'de') {
-						if (lang !== target) this.deps.store.put(notePath, s.hash, lang, s.masked);
-					}
+					if (lang && lang !== 'mixed' && lang !== target) this.deps.store.put(notePath, s.hash, lang, s.masked);
 					const signature = resolver?.signature(s.masked) ?? '';
 					const gl = { ...this.deps.store.peek(notePath)?.sentences[s.hash]?.gl };
 					if (signature) gl[target] = signature;

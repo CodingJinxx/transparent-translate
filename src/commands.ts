@@ -33,12 +33,14 @@ export function registerCommands(plugin: TransparentTranslatePlugin): void {
 	modeCommand('show-original', t('command.show-original'), 'original');
 	modeCommand('show-english', t('command.show-english'), 'en');
 	modeCommand('show-german', t('command.show-german'), 'de');
+	modeCommand('show-dutch', t('command.show-dutch'), 'nl');
 
 	const nameCommand = (id: string, name: string, mode: DisplayMode) =>
 		plugin.addCommand({ id, name, callback: () => plugin.setNameMode(mode) });
 	nameCommand('names-original', t('command.names-original'), 'original');
 	nameCommand('names-english', t('command.names-english'), 'en');
 	nameCommand('names-german', t('command.names-german'), 'de');
+	nameCommand('names-dutch', t('command.names-dutch'), 'nl');
 
 	plugin.addCommand({
 		id: 'cycle-display-language',
