@@ -55,7 +55,7 @@
 		"obsidian": "1.11.4",
 		"obsidian-launcher": "^3.3.0",
 		"tsx": "^4.23.15",
-		"typescript": "~5.9.3",
+		"typescript": "~7.0.2",
 		"typescript-eslint": "^8.71.2",
 		"vitest": "^5.0.4",
 		"wdio-obsidian-reporter": "^3.3.0",
